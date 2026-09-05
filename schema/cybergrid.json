@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "palette": {
+    "bg": "0e091d",
+    "acid_green": "c8e967",
+    "hot_pink": "FD3E6A",
+    "purple": "9147a8",
+    "cyan": "14B9B5",
+    "orange": "FF7F41",
+    "red": "f93d3b",
+    "white": "ffffff"
+  },
+  "paths": {
+    "sysops_root": "~/.sysops",
+    "cargo_target_root": "~/.cargo-target",
+    "arch_sys_root": "~/.arch-sys",
+    "omarchy_config_root": "~/.config/omarchy"
+  }
+}
