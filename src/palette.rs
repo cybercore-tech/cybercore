@@ -57,6 +57,9 @@ pub fn hex(name: &str) -> Option<String> {
             "orange" => &p.orange,
             "red" => &p.red,
             "white" => &p.white,
+            "panel" => &p.panel,
+            "line" => &p.line,
+            "muted" => &p.muted,
             _ => return None,
         }
         .clone(),

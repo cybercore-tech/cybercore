@@ -1,6 +1,6 @@
 [package]
 name = "cybercore"
-version = "0.1.2"
+version = "0.2.0"
 edition = "2021"
 description = "Shared config schema, palette, and path conventions for the Cybercore Systems Framework"
 
