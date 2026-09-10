@@ -1,14 +1,14 @@
 {
   "schema_version": 1,
   "palette": {
-    "bg": "0a0e17",
-    "acid_green": "b8ff3a",
-    "hot_pink": "ff2e97",
+    "bg": "06080f",
+    "acid_green": "c6ff45",
+    "hot_pink": "ff2d9e",
     "purple": "b57bff",
-    "cyan": "22e0ff",
-    "orange": "ff8a3d",
+    "cyan": "22e6ff",
+    "orange": "ff9142",
     "red": "ff3b52",
-    "white": "d7e2ff"
+    "white": "e6eeff"
   },
   "paths": {
     "sysops_root": "~/.sysops",
