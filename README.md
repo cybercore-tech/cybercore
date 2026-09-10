@@ -18,6 +18,23 @@ Everything else in this repo is a typed loader for that one file, not
 an owner of the data. **Edit the JSON. Never hand-edit palette values
 or paths anywhere else.**
 
+## Design tokens (fonts, sizing, spacing) — since v0.3.0
+
+Colours are `cybergrid.json`. **Everything else about the feel** — font
+families, a type scale, spacing, radii, motion, z-index — lives in
+**`css/cybertokens.css`** (with a `schema/tokens.json` mirror for
+non-CSS consumers).
+
+```rust
+// a ready-to-serve :root {} stylesheet
+let css = cybercore::tokens::CSS;
+```
+
+Load order in any project: `reset → cybertokens.css → theme colours →
+components`. Every Cybercore surface pulls the same `--font-mono`,
+`--fs-*`, `--space-*`, `--radius-*` so a new site or tool matches the
+rest without copy-paste.
+
 ## For Rust projects
 
 Add as a dependency:
