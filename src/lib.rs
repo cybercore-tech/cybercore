@@ -4,10 +4,13 @@
 //! shared across cyberdeck, cyberdock, cyberterm, cyberplug,
 //! omniscient, and whatever comes next.
 //!
-//! The actual data lives in `schema/cybergrid.json`, not in this
-//! source code — this crate is a typed, compile-time-embedded loader
-//! for that JSON, not the data's owner. Edit the JSON; everything
-//! else follows.
+//! The actual data lives under `schema/`, not in this source code — this
+//! crate is a typed, compile-time-embedded loader, not the data's owner.
+//! `schema/cybergrid.json` holds metadata (schema version, active theme,
+//! paths); each theme's 11-color palette is its own file under
+//! `schema/themes/<family>/<slug>.json`. `build.rs` merges all of it into
+//! one embedded blob at compile time — edit the JSON files, add or remove
+//! theme files freely; everything else follows, no Rust code to touch.
 
 pub mod palette;
 pub mod paths;
