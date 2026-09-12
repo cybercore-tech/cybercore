@@ -7,8 +7,15 @@ Input shapes accepted (Darkstar's theme-gen / sub-cyber format):
       "cursor": "#..", "colors": ["#..", x16] }        # or "color"
 
 Usage:
-    ansi2cybergrid.py THEME.json [--slug my-theme]      # print one entry
-    ansi2cybergrid.py A.json B.json ... --merge schema/cybergrid.json
+    ansi2cybergrid.py THEME.json [--slug my-theme]              # print one entry
+    ansi2cybergrid.py A.json B.json ... --write schema/themes/dystopian
+
+Since v0.4.0, cybercore's theme data is chunked: one 11-role palette per
+file under schema/themes/<family>/<slug>.json, merged into the embedded
+schema by build.rs at compile time. `--write DIR` drops one file per input
+theme straight into that family folder — no single cybergrid.json to merge
+into anymore. Refuses to overwrite an existing file unless `--force` is
+given, and never touches build.rs or cybergrid.json itself.
 
 These palettes don't follow the black/red/green/... ANSI ordering — they're
 artistic gradients — so roles are assigned by **hue classification** of every
@@ -20,6 +27,7 @@ from __future__ import annotations
 import argparse
 import colorsys
 import json
+import os
 import re
 import sys
 from collections import OrderedDict
@@ -177,7 +185,12 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("files", nargs="+")
     ap.add_argument("--slug")
-    ap.add_argument("--merge", metavar="cybergrid.json")
+    ap.add_argument("--write", metavar="schema/themes/<family>",
+                     help="Write one <slug>.json per theme into this family "
+                          "directory instead of printing to stdout.")
+    ap.add_argument("--force", action="store_true",
+                     help="With --write, overwrite a file that already exists "
+                          "instead of skipping it.")
     args = ap.parse_args()
 
     entries: "OrderedDict[str, OrderedDict[str, str]]" = OrderedDict()
@@ -187,16 +200,25 @@ def main() -> int:
         slug = args.slug if (args.slug and len(args.files) == 1) else _slug(data.get("name") or path)
         entries[slug] = convert(data)
 
-    if args.merge:
-        with open(args.merge) as fh:
-            schema = json.load(fh, object_pairs_hook=OrderedDict)
-        schema.setdefault("themes", OrderedDict())
+    if args.write:
+        os.makedirs(args.write, exist_ok=True)
+        written, skipped = [], []
         for slug, pal in entries.items():
-            schema["themes"][slug] = pal
-        with open(args.merge, "w") as fh:
-            json.dump(schema, fh, indent=2)
-            fh.write("\n")
-        print(f"merged {len(entries)}: {', '.join(entries)}")
+            out_path = os.path.join(args.write, f"{slug}.json")
+            if os.path.exists(out_path) and not args.force:
+                skipped.append(slug)
+                continue
+            with open(out_path, "w") as fh:
+                json.dump(pal, fh, indent=2)
+                fh.write("\n")
+            written.append(slug)
+        if written:
+            print(f"wrote {len(written)} to {args.write}/: {', '.join(written)}")
+        if skipped:
+            print(f"skipped {len(skipped)} (already exist, use --force to overwrite): "
+                  f"{', '.join(skipped)}", file=sys.stderr)
+        if not written and skipped:
+            return 1
     else:
         for slug, pal in entries.items():
             print(json.dumps({slug: pal}, indent=2))
