@@ -2,8 +2,23 @@
 name = "cybercore"
 version = "0.4.0"
 edition = "2021"
-description = "Shared config schema, palette, and path conventions for the Cybercore Systems Framework"
+rust-version = "1.70"
+description = "Shared config schema, palette, design tokens, and path conventions for the Cybercore Systems Framework"
+license = "MIT"
+repository = "https://github.com/darkstardevx/cybercore"
+homepage = "https://github.com/darkstardevx/cybercore"
+documentation = "https://docs.rs/cybercore"
+readme = "README.md"
 build = "build.rs"
+
+include = [
+    "/src/**",
+    "/schema/**",
+    "/css/**",
+    "/build.rs",
+    "/README.md",
+    "/LICENSE-MIT",
+]
 
 [lib]
 name = "cybercore"
