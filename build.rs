@@ -13,7 +13,9 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 fn collect_themes(dir: &Path, out: &mut serde_json::Map<String, serde_json::Value>) {
-    let Ok(entries) = fs::read_dir(dir) else { return };
+    let Ok(entries) = fs::read_dir(dir) else {
+        return;
+    };
     for entry in entries.flatten() {
         let path = entry.path();
         // Re-run if any individual theme file changes — watching just the
@@ -27,8 +29,13 @@ fn collect_themes(dir: &Path, out: &mut serde_json::Map<String, serde_json::Valu
             let slug = path.file_stem().unwrap().to_string_lossy().to_string();
             let raw = fs::read_to_string(&path)
                 .unwrap_or_else(|e| panic!("failed to read theme file {}: {}", path.display(), e));
-            let value: serde_json::Value = serde_json::from_str(&raw)
-                .unwrap_or_else(|e| panic!("failed to parse theme file {} as JSON: {}", path.display(), e));
+            let value: serde_json::Value = serde_json::from_str(&raw).unwrap_or_else(|e| {
+                panic!(
+                    "failed to parse theme file {} as JSON: {}",
+                    path.display(),
+                    e
+                )
+            });
             if out.insert(slug.clone(), value).is_some() {
                 panic!(
                     "duplicate theme slug \"{}\" — two files under schema/themes/ produce the same name ({})",
