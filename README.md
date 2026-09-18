@@ -2,6 +2,14 @@
   <img src="assets/header-stacked.svg" width="480" alt="Cybercore — Single source of truth for schemas, palette, and paths">
 </p>
 
+<p align="center">
+  <a href="https://darkstardevx.github.io/cybercore/">Live theme gallery & docs →</a>
+</p>
+
+[![crates.io](https://img.shields.io/crates/v/cybercore.svg)](https://crates.io/crates/cybercore)
+[![downloads](https://img.shields.io/crates/d/cybercore.svg)](https://crates.io/crates/cybercore)
+[![docs.rs](https://img.shields.io/docsrs/cybercore)](https://docs.rs/cybercore)
+
 The master definition repository and underpinning system engine of the
 Cybercore Systems Framework. The single source of truth for global
 configuration schemas, the CYBERGRID color palette, and canonical
