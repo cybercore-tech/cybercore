@@ -140,7 +140,19 @@ button, .btn-link, .btn-ghost, .titlebar-text, .card-title, .field-label {
 .btn-ghost:hover { border-color: var(--cyan); box-shadow: 0 0 10px color-mix(in srgb, var(--cyan) 30%, transparent); }
 .btn-ghost.active { color: var(--acid); border-color: var(--acid); }
 
-main { max-width: 1300px; margin: 0 auto; padding: 1.5rem; }
+/* Deliberately no bare `main { ... }` rule here. That's page-shell
+   layout (max-width/centering/padding for the whole content area), not
+   a reusable component — it belongs to whatever app-shell each
+   consuming app already has (cyberdesk's own is a CSS grid with a
+   sidebar; `main` is already its 1fr column and doesn't need or want a
+   competing max-width/margin:auto fighting that). A version of this
+   file once had `main { max-width: 1300px; margin: 0 auto; padding:
+   1.5rem; }` — cyberdeck's own convention — and it silently broke every
+   existing cyberdesk page's layout (content capped and re-centered
+   instead of filling the grid column) the moment cyberdesk linked this
+   stylesheet in. Give a wrapper *class* (like cyberdesk's own `.wrap`)
+   this treatment in the consuming app instead, never the bare element
+   selector, in a file every app on the page links. */
 
 /* Page header pane — a calm dark panel (not itself saturated purple, so
    it doesn't fight with the title pill sitting inside it). */
