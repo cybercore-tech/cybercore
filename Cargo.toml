@@ -1,6 +1,6 @@
 [package]
 name = "cybercore"
-version = "0.4.0"
+version = "0.5.0"
 edition = "2021"
 rust-version = "1.70"
 description = "Shared config schema, palette, design tokens, and path conventions for the Cybercore Systems Framework"

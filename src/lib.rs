@@ -12,6 +12,7 @@
 //! one embedded blob at compile time — edit the JSON files, add or remove
 //! theme files freely; everything else follows, no Rust code to touch.
 
+pub mod components;
 pub mod palette;
 pub mod paths;
 pub mod schema;
