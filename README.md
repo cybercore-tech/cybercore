@@ -1,4 +1,6 @@
-# cybercore
+<p align="center">
+  <img src="assets/header-stacked.svg" width="480" alt="Cybercore — Single source of truth for schemas, palette, and paths">
+</p>
 
 The master definition repository and underpinning system engine of the
 Cybercore Systems Framework. The single source of truth for global
