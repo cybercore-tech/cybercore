@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/header-stacked.svg" width="480" alt="Cybercore — Single source of truth for schemas, palette, and paths">
+  <img src="assets/header-stacked.svg" width="820" alt="Cybercore — Single source of truth for schemas, palette, and paths">
 </p>
 
 <p align="center">
