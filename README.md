@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  <a href="https://darkstardevx.github.io/cybercore/">Live theme gallery & docs →</a>
+  <a href="https://cybercore-tech.github.io/cybercore/">Live theme gallery & docs →</a>
 </p>
 
 [![crates.io](https://img.shields.io/crates/v/cybercore.svg)](https://crates.io/crates/cybercore)
@@ -51,7 +51,7 @@ Add as a dependency:
 
 ```toml
 [dependencies]
-cybercore = { git = "https://github.com/darkstardevx/cybercore.git", tag = "v0.1.0" }
+cybercore = { git = "https://github.com/cybercore-tech/cybercore.git", tag = "v0.1.0" }
 ```
 
 (or `path = "../cybercore"` for local development against an
