@@ -16,4 +16,5 @@ pub mod components;
 pub mod palette;
 pub mod paths;
 pub mod schema;
+pub mod status;
 pub mod tokens;
