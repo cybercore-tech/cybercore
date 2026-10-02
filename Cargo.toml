@@ -2,7 +2,7 @@
 name = "cybercore"
 version = "0.5.0"
 edition = "2021"
-rust-version = "1.70"
+rust-version = "1.85"
 description = "Shared config schema, palette, design tokens, and path conventions for the Cybercore Systems Framework"
 license = "MIT"
 repository = "https://github.com/cybercore-tech/cybercore"
@@ -17,6 +17,7 @@ include = [
     "/css/**",
     "/build.rs",
     "/README.md",
+    "/CHANGELOG.md",
     "/LICENSE-MIT",
 ]
 
