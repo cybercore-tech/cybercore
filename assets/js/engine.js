@@ -233,22 +233,9 @@
     }));
   }
   function scene(id, p) {
-    const s = id.replace(/[^a-z0-9]/gi, '');
-    const h = 46, rows = [50, 53, 57, 62, 69, 79], cols = [-80, -50, -25, 0, 25, 50, 80];
-    return `<svg class="scene" viewBox="0 0 160 80" aria-hidden="true">
-      <defs><linearGradient id="sk${s}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#${p.bg}"/><stop offset="1" stop-color="#${p.purple}" stop-opacity=".55"/></linearGradient>
-      <linearGradient id="su${s}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#${p.orange}"/><stop offset="1" stop-color="#${p.hot_pink}"/></linearGradient>
-      <clipPath id="cl${s}"><rect width="160" height="${h}"/></clipPath></defs>
-      <rect width="160" height="80" fill="#${p.bg}"/><rect width="160" height="${h}" fill="url(#sk${s})"/>
-      <g fill="#${p.white}" opacity=".7"><circle cx="18" cy="9" r=".7"/><circle cx="44" cy="20" r=".5"/><circle cx="130" cy="12" r=".8"/><circle cx="148" cy="28" r=".5"/><circle cx="104" cy="6" r=".5"/></g>
-      <g clip-path="url(#cl${s})"><circle cx="80" cy="${h}" r="23" fill="url(#su${s})"/>
-      ${[30, 35, 39, 42.5].map((y, i) => `<rect x="50" y="${y}" width="60" height="${1 + i * .6}" fill="#${p.bg}" opacity=".9"/>`).join('')}</g>
-      <path d="M0 ${h}L18 34 30 40 46 28 60 ${h}M100 ${h}l14-14 10 6 16-12 20 20" fill="#${p.panel}" stroke="#${p.cyan}" stroke-width=".8"/>
-      <rect y="${h}" width="160" height="${80 - h}" fill="#${p.bg}"/>
-      <g stroke="#${p.hot_pink}" stroke-width=".7" opacity=".9">${rows.map(y => `<path d="M0 ${y}H160"/>`).join('')}${cols.map(x => `<path d="M${80 + x * .2} ${h}L${80 + x * 2.2} 80"/>`).join('')}</g>
-      <path d="M0 ${h}H160" stroke="#${p.cyan}" stroke-width="1.2"/>
-      <path d="M8 74h14M8 70h8" stroke="#${p.acid_green}" stroke-width="1.4"/>
-    </svg>`;
+    const m = mashOf(id) || parseMix(id);
+    if (window.CC_SCENE) return window.CC_SCENE(id, p, familyOf(id), m && { baseFamily: familyOf(m.base), accentFamily: familyOf(m.accent) });
+    return '';
   }
   function cardStyle(p) { return Object.entries({ bg: 'bg', white: 'white', panel: 'panel', line: 'line', muted: 'muted', acid: 'acid_green', pink: 'hot_pink', cyan: 'cyan' }).map(([v, k]) => `--t-${v}:#${p[k]}`).join(';'); }
   async function renderCards() {
