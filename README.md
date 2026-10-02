@@ -41,7 +41,7 @@ Add as a dependency:
 
 ```toml
 [dependencies]
-cybercore = { git = "https://github.com/darkstardevx/cybercore.git", tag = "v0.1.0" }
+cybercore = { git = "https://github.com/cybercore-tech/cybercore.git", tag = "v0.1.0" }
 ```
 
 (or `path = "../cybercore"` for local development against an
