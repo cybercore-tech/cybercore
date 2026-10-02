@@ -2,7 +2,25 @@
 
 All notable changes to `cybercore` are documented in this file.
 
-## [0.5.0] - Unreleased
+## [0.6.0] - Unreleased
+
+### Added
+
+- `status` feature: the Cybercore tool status contract (`schema/status.json`)
+  and `cybercore::status`, with `ToolStatus`, `Health`, `Metric`, `Event`,
+  `Action` and atomic `write` / `write_in`, plus `read`, `path`, `dir` and
+  `validate_tool_name`.
+  - Status files live in `$XDG_RUNTIME_DIR/cybercore/<tool>.json`, falling
+    back to `$HOME/.local/state/cybercore/status/`. There is no shared `/tmp`
+    fallback. On Unix the directory is `0700` and files are `0600`.
+  - Each write goes to a unique temporary file opened with `create_new`
+    (existing files and symlinks are never followed), is synced, and is
+    renamed into place. Tool names are restricted to letters, digits, `-` and
+    `_`.
+  - Off by default, so cybercore without `status` still depends only on serde.
+- `publish_status` example (`--features status`).
+
+ - Unreleased
 
 ### Added
 

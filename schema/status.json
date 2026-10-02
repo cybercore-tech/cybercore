@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "description": "Canonical Cybercore tool status schema for family TUI, HUD, and Mission Control reporting",
+  "fields": {
+    "schema_version": "u32",
+    "tool": "string",
+    "version": "string",
+    "host": "string",
+    "updated_at": "string (RFC 3339 / ISO 8601)",
+    "health": "string (ok | watch | warning | urgent)",
+    "summary": "string",
+    "metrics": [
+      {
+        "label": "string",
+        "value": "string",
+        "unit": "string (optional)"
+      }
+    ],
+    "events": [
+      {
+        "time": "string",
+        "severity": "string (info | warn | error)",
+        "text": "string"
+      }
+    ],
+    "actions": [
+      {
+        "label": "string",
+        "argv": ["string"]
+      }
+    ]
+  }
+}
