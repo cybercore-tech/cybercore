@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/header-stacked.svg" width="820" alt="Cybercore — Single source of truth for schemas, palette, and paths">
+  <img src="assets/header-neon.svg" width="900" alt="Cybercore — schema, palette, tokens and paths: 73 themes, one source of truth">
 </p>
 
 <p align="center">
