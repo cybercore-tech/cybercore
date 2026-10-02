@@ -1,6 +1,6 @@
 [package]
 name = "cybercore"
-version = "0.5.0"
+version = "0.6.0"
 edition = "2021"
 rust-version = "1.85"
 description = "Shared config schema, palette, design tokens, and path conventions for the Cybercore Systems Framework"
@@ -28,9 +28,20 @@ path = "src/lib.rs"
 [dependencies]
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-chrono = { version = "0.4", features = ["clock", "serde"] }
-hostname = "0.4"
-anyhow = "1"
+chrono = { version = "0.4", default-features = false, features = ["clock", "std"], optional = true }
+hostname = { version = "0.4", optional = true }
+
+[features]
+default = []
+# Tool status contract: atomic per-tool status JSON (see src/status.rs).
+status = ["dep:chrono", "dep:hostname"]
+
+[[example]]
+name = "publish_status"
+required-features = ["status"]
+
+[package.metadata.docs.rs]
+all-features = true
 
 [build-dependencies]
 serde_json = "1"

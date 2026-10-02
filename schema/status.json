@@ -12,8 +12,8 @@
     "metrics": [
       {
         "label": "string",
-        "value": "string or number",
-        "unit": "string"
+        "value": "string",
+        "unit": "string (optional)"
       }
     ],
     "events": [

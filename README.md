@@ -28,6 +28,32 @@ Everything else in this repo is a typed loader for that one file, not
 an owner of the data. **Edit the JSON. Never hand-edit palette values
 or paths anywhere else.**
 
+## Tool status (feature `status`) — since v0.6.0
+
+Every Cybercore tool can publish one JSON status snapshot for the TUI hub and
+the Omarchy HUD to read:
+
+```toml
+[dependencies]
+cybercore = { version = "0.6", features = ["status"] }
+```
+
+```rust
+use cybercore::status::{self, Health, ToolStatus};
+
+let snapshot = ToolStatus {
+    tool: "sigilward".into(),
+    version: env!("CARGO_PKG_VERSION").into(),
+    health: Health::Watch,
+    summary: "2 files drifted".into(),
+    ..ToolStatus::default()
+};
+status::write(&snapshot)?; // atomic: readers never see partial JSON
+```
+
+Files go to `$XDG_RUNTIME_DIR/cybercore/<tool>.json` (falling back to
+`~/.local/state/cybercore/status/`). The contract is `schema/status.json`.
+
 ## Design tokens (fonts, sizing, spacing) — since v0.3.0
 
 Colours are `cybergrid.json`. **Everything else about the feel** — font
@@ -51,7 +77,7 @@ Add as a dependency:
 
 ```toml
 [dependencies]
-cybercore = "0.5"
+cybercore = "0.6"
 ```
 
 Requires Rust 1.85 or newer. For local development against an unpublished

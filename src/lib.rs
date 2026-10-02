@@ -16,5 +16,6 @@ pub mod components;
 pub mod palette;
 pub mod paths;
 pub mod schema;
+#[cfg(feature = "status")]
 pub mod status;
 pub mod tokens;
