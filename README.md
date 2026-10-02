@@ -51,11 +51,12 @@ Add as a dependency:
 
 ```toml
 [dependencies]
-cybercore = { git = "https://github.com/cybercore-tech/cybercore.git", tag = "v0.1.0" }
+cybercore = "0.5"
 ```
 
-(or `path = "../cybercore"` for local development against an
-unpublished change)
+Requires Rust 1.85 or newer. For local development against an unpublished
+change, use a `[patch.crates-io]` entry instead of committing a `path`
+dependency, so the project still builds from a clean checkout.
 
 Then:
 
