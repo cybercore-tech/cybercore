@@ -225,7 +225,7 @@
 
   function countUp(el) {
     const end = +el.dataset.count; const t0 = performance.now(); const d = 1400;
-    const step = t => { const k = Math.min(1, (t - t0) / d); el.textContent = Math.round(end * (1 - Math.pow(1 - k, 3))); if (k < 1) requestAnimationFrame(step); };
+    const step = t => { const k = Math.max(0, Math.min(1, (t - t0) / d)); el.textContent = Math.round(end * (1 - Math.pow(1 - k, 3))); if (k < 1) requestAnimationFrame(step); };
     still ? (el.textContent = end) : requestAnimationFrame(step);
   }
   const co = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { countUp(e.target); co.unobserve(e.target); } }));
