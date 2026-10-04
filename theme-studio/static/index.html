@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <title>Cybercore Theme Studio</title>
+  <style id="theme-css"></style>
+  <style id="draft-css"></style>
+  <style>
+    :root { color-scheme: dark; --bg:#100d19; --fg:#f3efff; --panel:#1a1626; --line:#393148; --muted:#aaa2b7; --acid:#c8e967; --pink:#fd3e6a; --cyan:#14b9b5; --purple:#9147a8; --orange:#ff7f41; --red:#f93d3b; --radius:10px; --font-ui:Inter,sans-serif; --font-mono:"JetBrains Mono",monospace; }
+    * { box-sizing: border-box; }
+    body { margin:0; background:var(--bg); color:var(--fg); font:15px/1.5 var(--font-ui); font-family:var(--font-ui); }
+    button,input,select { font:inherit; }
+    button,.button { color:var(--fg); background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:.62rem .9rem; cursor:pointer; text-decoration:none; transition:all var(--dur-mid,.2s); }
+    button:hover,.button:hover { border-color:var(--acid); color:var(--acid); }
+    input,select { background:var(--bg); color:var(--fg); border:1px solid var(--line); border-radius:var(--radius); padding:.6rem .7rem; width:100%; }
+    header { display:flex; align-items:center; justify-content:space-between; gap:1rem; padding:1rem clamp(1rem,4vw,3.5rem); border-bottom:1px solid var(--line); position:sticky; top:0; z-index:2; background:color-mix(in srgb,var(--bg) 92%,transparent); backdrop-filter:blur(12px); }
+    .brand { letter-spacing:.12em; font-weight:800; }.brand b { color:var(--acid); }
+    .header-actions { display:flex; align-items:center; gap:.55rem; flex-wrap:wrap; }
+    main { max-width:1440px; margin:auto; padding:clamp(1rem,4vw,3rem); }
+    .intro { display:flex; align-items:end; justify-content:space-between; gap:1.5rem; margin-bottom:1.5rem; }
+    h1 { margin:0; font:clamp(1.8rem,4vw,3rem)/1.1 var(--font-display,var(--font-ui)); letter-spacing:-.04em; }.intro p { color:var(--muted); max-width:44rem; margin:.45rem 0 0; }
+    .workspace { display:grid; grid-template-columns:minmax(290px,390px) minmax(0,1fr); gap:1.2rem; align-items:start; }
+    .panel { background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:1.1rem; box-shadow:0 14px 50px #0002; }
+    .panel h2 { font-size:1.02rem; margin:0 0 .8rem; }
+    .field { display:grid; gap:.3rem; margin:.6rem 0; }.field label,.eyebrow { color:var(--muted); font-size:.78rem; letter-spacing:.08em; text-transform:uppercase; }
+    .row { display:grid; grid-template-columns:1fr 1fr; gap:.65rem; }.actions { display:flex; flex-wrap:wrap; gap:.5rem; margin:.85rem 0; }
+    .swatches { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:.6rem; margin-top:.8rem; }
+    .swatch { display:flex; align-items:center; gap:.6rem; color:var(--muted); font: .75rem var(--font-mono); }
+    .swatch input { width:2.6rem; height:2rem; padding:.15rem; border-radius:6px; }
+    .preview { min-height:560px; }.preview-head { display:flex; justify-content:space-between; align-items:center; gap:1rem; border-bottom:1px solid var(--line); padding-bottom:.8rem; }
+    .sample-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:.8rem; margin-top:1rem; }
+    .sample-card { background:color-mix(in srgb,var(--bg) 55%,var(--panel)); border:1px solid var(--line); border-radius:var(--radius); padding:calc(1rem * var(--density,1)); }
+    .sample-card h3 { margin:.2rem 0 .5rem; }.sample-card p { color:var(--muted); }.mono { font-family:var(--font-mono); }
+    .badge { display:inline-block; border-radius:99px; padding:.2rem .55rem; color:var(--acid); background:color-mix(in srgb,var(--acid) 15%,transparent); font-size:.75rem; }
+    .palette-strip { display:flex; gap:.4rem; margin-top:1rem; flex-wrap:wrap; }.palette-strip i { width:2.2rem; height:2.2rem; border-radius:var(--radius); border:1px solid #ffffff22; }
+    #contrast { color:var(--muted); min-height:1.5rem; font-size:.82rem; }.theme-row { display:flex; gap:.5rem; align-items:center; }.theme-row select { flex:1; }
+    .status { min-height:1.3rem; color:var(--muted); font-size:.85rem; }.status.error { color:var(--pink); }.status.ok { color:var(--acid); }
+    @media(max-width:850px) { .workspace { grid-template-columns:1fr; }.intro { display:block; } header { position:static; } }
+    @media(max-width:520px) { .sample-grid,.row { grid-template-columns:1fr; }.header-actions { justify-content:flex-end; }.swatches { grid-template-columns:1fr 1fr; } }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">CYBERCORE <b>//</b> THEME STUDIO</div>
+    <div class="header-actions">
+      <button id="appearance" type="button" title="Change shared appearance">Loading mode…</button>
+      <a class="button" href="http://127.0.0.1:8080/">Open Cyberdeck Hub ↗</a>
+    </div>
+  </header>
+  <main>
+    <section class="intro">
+      <div><div class="eyebrow">Shared theme workspace</div><h1>Make the whole stack yours.</h1><p>Create, validate, import, and export themes for Cybercore apps. Saved themes live in the shared user library and do not require rebuilding apps.</p></div>
+    </section>
+    <div class="workspace">
+      <section class="panel" aria-labelledby="editor-title">
+        <h2 id="editor-title">Theme editor</h2>
+        <div class="field"><label for="theme-picker">Theme library</label><div class="theme-row"><select id="theme-picker"></select><button id="load-theme" type="button">Edit</button></div></div>
+        <div class="row">
+          <div class="field"><label for="name">Name</label><input id="name" maxlength="96" placeholder="My theme"></div>
+          <div class="field"><label for="family">Family</label><input id="family" maxlength="256" value="custom"></div>
+        </div>
+        <div class="field"><label for="description">Description</label><input id="description" maxlength="256"></div>
+        <div class="row"><div class="field"><label for="author">Author</label><input id="author" maxlength="256"></div><div class="field"><label for="variant">Edit variant</label><select id="variant"><option value="dark">Dark</option><option value="light">Light</option></select></div></div>
+        <div class="row">
+          <div class="field"><label for="font-ui">UI font</label><input id="font-ui" value="Inter"></div>
+          <div class="field"><label for="font-mono">Monospace font</label><input id="font-mono" value="JetBrains Mono"></div>
+        </div>
+        <div class="row">
+          <div class="field"><label for="font-display">Display font</label><input id="font-display" value="Oxanium"></div>
+          <div class="field"><label for="density">Density</label><select id="density"><option>compact</option><option selected>comfortable</option><option>spacious</option></select></div>
+        </div>
+        <div class="row">
+          <div class="field"><label for="corners">Corners</label><select id="corners"><option>sharp</option><option selected>soft</option><option>rounded</option></select></div>
+          <div class="field"><label for="motion">Motion</label><select id="motion"><option>full</option><option>reduced</option><option>none</option></select></div>
+        </div>
+        <div id="swatches" class="swatches"></div>
+        <div id="contrast" role="status" aria-live="polite"></div>
+        <p id="status" class="status" role="status" aria-live="polite"></p>
+        <div class="actions">
+          <button id="new-theme" type="button">New</button><button id="save-theme" type="button">Save &amp; apply</button><button id="delete-theme" type="button">Delete custom</button>
+        </div>
+        <div class="actions">
+          <button id="import-theme" type="button">Import JSON</button><button id="export-theme" type="button">Export JSON</button><input id="file" type="file" accept=".json,application/json" hidden>
+        </div>
+      </section>
+      <section class="panel preview" aria-labelledby="preview-title">
+        <div class="preview-head"><div><div class="eyebrow">Live preview</div><h2 id="preview-title">Sample workspace</h2></div><span class="badge">SYSTEM ONLINE</span></div>
+        <div class="sample-grid">
+          <article class="sample-card"><div class="eyebrow">Dashboard card</div><h3>Signal monitor</h3><p>Surface, body copy, borders, density, and typography preview together here.</p><span class="badge">HEALTHY</span></article>
+          <article class="sample-card"><div class="eyebrow">Terminal output</div><p class="mono">$ cybercore theme inspect<br><span style="color:var(--acid)">✓ theme tokens loaded</span><br><span style="color:var(--cyan)">→ 11 semantic colors</span></p></article>
+          <article class="sample-card"><div class="eyebrow">Accent roles</div><h3>Readable hierarchy</h3><p>Primary text, muted text, links, and status colors should remain distinct.</p><button type="button">Action</button></article>
+          <article class="sample-card"><div class="eyebrow">Palette</div><h3>Color system</h3><div id="palette-strip" class="palette-strip"></div></article>
+        </div>
+      </section>
+    </div>
+  </main>
+<script>
+const keys = ['bg','white','acid_green','hot_pink','purple','cyan','orange','red','panel','line','muted'];
+const roles = {bg:'--bg',white:'--fg',acid_green:'--acid',hot_pink:'--pink',purple:'--purple',cyan:'--cyan',orange:'--orange',red:'--red',panel:'--panel',line:'--line',muted:'--muted'};
+const el = id => document.getElementById(id);
+let themes = [], activeId = '', sharedAppearance = 'dark', editMode = 'dark', variants = {}, debounce;
+
+function paletteNow() { return Object.fromEntries(keys.map(key => [key, el('color-' + key).value.slice(1)])); }
+function fillPalette(palette) { keys.forEach(key => { el('color-' + key).value = '#' + ((palette && palette[key]) || '888888').replace('#',''); }); preview(); }
+function currentDocument() {
+  variants[editMode] = paletteNow();
+  const name = el('name').value.trim() || 'Untitled theme';
+  const id = name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,64) || 'custom-theme';
+  const palette = variants.dark || paletteNow();
+  const savedVariants = variants.light ? {light:variants.light} : {};
+  return {format_version:1, metadata:{id,name,family:el('family').value.trim() || 'custom',description:el('description').value,author:el('author').value}, palette, variants:savedVariants,
+    design:{font_ui:el('font-ui').value,font_mono:el('font-mono').value,font_display:el('font-display').value,density:el('density').value,corners:el('corners').value,motion:el('motion').value}};
+}
+function preview() {
+  const p = paletteNow(), css = [];
+  for (const key of keys) css.push(roles[key]+':#'+p[key].replace('#',''));
+  const safeFont = value => /^[A-Za-z0-9 _-]{1,64}$/.test(value) ? value : 'Inter';
+  css.push('--font-ui:"'+safeFont(el('font-ui').value)+'",sans-serif','--font-mono:"'+safeFont(el('font-mono').value)+'",monospace','--font-display:"'+safeFont(el('font-display').value)+'",sans-serif');
+  css.push('--radius:'+({sharp:'2px',soft:'10px',rounded:'18px'}[el('corners').value] || '10px'));
+  css.push('--density:'+({compact:'.85',comfortable:'1',spacious:'1.15'}[el('density').value] || '1'));
+  css.push('--dur-mid:'+({full:'.24s',reduced:'.08s',none:'0s'}[el('motion').value] || '.24s'));
+  el('draft-css').textContent=':root{'+css.join(';')+'}';
+  el('palette-strip').replaceChildren(...keys.slice(2,8).map(key => {const swatch=document.createElement('i');swatch.style.backgroundColor='#'+p[key].replace('#','');swatch.title=key;return swatch;}));
+  clearTimeout(debounce); debounce=setTimeout(validateDraft,180);
+}
+async function request(url, options) {
+  const response = await fetch(url, options);
+  const data = response.status === 204 ? null : await response.json().catch(()=>null);
+  if (!response.ok) throw new Error(data?.error || 'Request failed ('+response.status+')');
+  return data;
+}
+function message(text, kind='') { el('status').textContent=text; el('status').className='status '+kind; }
+async function validateDraft() {
+  try {
+    const report = await request('/api/themes/validate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(currentDocument())});
+    const result = editMode === 'light' ? (report.light_contrast || report.contrast) : report.contrast;
+    const failed = (result?.checks || []).filter(check=>!check.passes);
+    el('contrast').textContent = failed.length ? 'Contrast needs attention: '+failed.map(check=>check.label+' '+check.ratio.toFixed(2)+':1').join(', ') : 'Common text and accent contrast checks pass.';
+  } catch (error) { el('contrast').textContent=error.message; }
+}
+async function refreshLibrary(preferred=activeId) {
+  const data=await request('/api/themes'); themes=data.themes; activeId=data.active; sharedAppearance=data.appearance;
+  el('appearance').textContent=sharedAppearance+' appearance';
+  el('theme-picker').replaceChildren(...themes.map(theme=>{const option=document.createElement('option');option.value=theme.id;option.textContent=theme.document.metadata.name+(theme.builtin?' · built-in':' · custom');return option;}));
+  el('theme-picker').value=themes.some(theme=>theme.id===preferred)?preferred:activeId;
+  await applyTheme(activeId);
+}
+async function applyTheme(id) {
+  const response=await fetch('/api/css/'+encodeURIComponent(id)+'?appearance='+sharedAppearance,{headers:{Accept:'text/css'}});
+  if(!response.ok) throw new Error('Theme stylesheet unavailable');
+  el('theme-css').textContent=await response.text(); el('draft-css').textContent=''; activeId=id;
+}
+function editDocument(document) {
+  variants=JSON.parse(JSON.stringify(document.variants || {})); variants.dark=document.palette; editMode='dark'; el('variant').value='dark';
+  el('name').value=document.metadata.name || ''; el('family').value=document.metadata.family || 'custom'; el('description').value=document.metadata.description || ''; el('author').value=document.metadata.author || '';
+  el('font-ui').value=document.design?.font_ui || 'Inter'; el('font-mono').value=document.design?.font_mono || 'JetBrains Mono'; el('font-display').value=document.design?.font_display || 'Oxanium';
+  el('density').value=document.design?.density || 'comfortable'; el('corners').value=document.design?.corners || 'sharp'; el('motion').value=document.design?.motion || 'full';
+  fillPalette(document.palette || document);
+}
+function newTheme() {
+  variants={}; editMode='dark'; el('variant').value='dark'; el('name').value=''; el('family').value='custom'; el('description').value=''; el('author').value='';
+  el('font-ui').value='Inter'; el('font-mono').value='JetBrains Mono'; el('font-display').value='Oxanium'; el('density').value='comfortable'; el('corners').value='sharp'; el('motion').value='full';
+  const active=themes.find(theme=>theme.id===activeId); fillPalette(active?.document.palette); message('New theme draft.');
+}
+async function saveTheme() {
+  try { const result=await request('/api/themes',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(currentDocument())}); await refreshLibrary(result.id); message('Saved and applied '+result.name+'.','ok'); }
+  catch(error) { message(error.message,'error'); }
+}
+async function deleteTheme() {
+  const id=el('theme-picker').value, theme=themes.find(item=>item.id===id);
+  if (!theme || theme.builtin) { message('Built-in themes cannot be deleted.','error'); return; }
+  try { await request('/api/themes/'+encodeURIComponent(id),{method:'DELETE'}); await refreshLibrary(); message('Custom theme deleted.','ok'); }
+  catch(error) { message(error.message,'error'); }
+}
+async function changeAppearance() {
+  const next=sharedAppearance==='dark'?'light':'dark';
+  try { await request('/api/appearance/'+next,{method:'POST'}); sharedAppearance=next; el('appearance').textContent=next+' appearance'; await applyTheme(activeId); }
+  catch(error) { message(error.message,'error'); }
+}
+function changeVariant() {
+  variants[editMode]=paletteNow(); editMode=el('variant').value;
+  fillPalette(editMode==='light' ? (variants.light || variants.dark) : (variants.dark || variants.light));
+}
+function exportTheme() {
+  const themeDocument=currentDocument(), blob=new Blob([JSON.stringify(themeDocument,null,2)],{type:'application/json'}), link=document.createElement('a');
+  link.href=URL.createObjectURL(blob); link.download=themeDocument.metadata.id+'.json'; link.click(); URL.revokeObjectURL(link.href);
+}
+async function importTheme(file) {
+  if (!file) return;
+  try { const data=JSON.parse(await file.text()); editDocument(data); message('Imported '+file.name+'. Review and save when ready.','ok'); }
+  catch(error) { message('Could not import theme: '+error.message,'error'); }
+  el('file').value='';
+}
+
+function buildSwatches() {
+  el('swatches').replaceChildren(...keys.map(key=>{const label=document.createElement('label');label.className='swatch';label.textContent=key.replace('_',' ');const input=document.createElement('input');input.type='color';input.id='color-'+key;input.addEventListener('input',preview);label.append(input);return label;}));
+}
+buildSwatches();
+document.querySelectorAll('#name,#family,#description,#author,#font-ui,#font-mono,#font-display,#density,#corners,#motion').forEach(input=>input.addEventListener('input',preview));
+document.querySelectorAll('#density,#corners,#motion').forEach(input=>input.addEventListener('change',preview));
+el('appearance').addEventListener('click',changeAppearance);
+el('variant').addEventListener('change',changeVariant);
+el('theme-picker').addEventListener('change',async event=>{try{await request('/api/active/'+encodeURIComponent(event.target.value),{method:'POST'});await applyTheme(event.target.value);}catch(error){message(error.message,'error');}});
+el('load-theme').addEventListener('click',()=>{const selected=themes.find(theme=>theme.id===el('theme-picker').value);if(selected)editDocument(selected.document);});
+el('new-theme').addEventListener('click',newTheme);el('save-theme').addEventListener('click',saveTheme);el('delete-theme').addEventListener('click',deleteTheme);
+el('import-theme').addEventListener('click',()=>el('file').click());el('file').addEventListener('change',event=>importTheme(event.target.files[0]));el('export-theme').addEventListener('click',exportTheme);
+refreshLibrary().then(()=>newTheme()).catch(error=>message(error.message,'error'));
+</script>
+</body>
+</html>

@@ -94,8 +94,10 @@ under `$XDG_CONFIG_HOME/cybercore/themes/` (or `~/.config/cybercore/themes/`);
 set `CYBERCORE_CONFIG_DIR` to override the shared config root. The selected
 theme and dark/light appearance are recorded in `active-theme.json`.
 
-The Hub exposes the same catalog through its theme picker and creator, with
-JSON import/export, contrast feedback, and shared persistence. See
+The Hub exposes the shared catalog through its theme picker. The standalone
+creator is the `cybercore-theme-studio` workspace package; run it with
+`cargo run -p cybercore-theme-studio` for JSON import/export, contrast
+feedback, and shared persistence. See
 [`docs/theme-engine.md`](docs/theme-engine.md) for the document contract,
 storage rules, API, and integration notes.
 

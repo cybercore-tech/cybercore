@@ -53,8 +53,8 @@ versions and invalid fields are rejected.
 
 Old flat JSON palette files (without `format_version`, `metadata`, or
 `palette`) remain readable through `ThemeDocument::from_json`; callers pass
-the ID to assign to that imported palette. The Hub creator imports either
-shape and exports versioned documents.
+the ID to assign to that imported palette. Theme Studio imports either shape
+and exports versioned documents.
 
 ## Rust API
 
@@ -99,17 +99,31 @@ Custom themes may use the `family` field for organization in creator UIs.
 
 ## Hub integration
 
-Cyberdeck Hub exposes `GET /api/cybergrid/themes`, `POST /api/cybergrid/themes`,
-`DELETE /api/cybergrid/themes/:id`, `POST /api/cybergrid/active/:id`,
-`POST /api/cybergrid/appearance/:mode`, `POST /api/cybergrid/validate`, and
-`GET /api/cybergrid/css/:name?appearance=dark|light`. The creator saves to
-the shared config catalog, so themes are available to other Cybercore apps
-running as the same user.
+Cyberdeck Hub exposes `GET /api/cybergrid/themes`, `POST /api/cybergrid/active/:id`,
+`POST /api/cybergrid/appearance/:mode`, and
+`GET /api/cybergrid/css/:name?appearance=dark|light`. The Hub links to the
+standalone `cybercore-theme-studio` app for authoring. Studio owns the save,
+delete, and validation APIs, and writes to the same shared config catalog.
+
+## Cybercore Theme Studio
+
+The workspace package `cybercore-theme-studio` runs a standalone creator at
+`http://127.0.0.1:8761/` by default:
+
+```sh
+cargo run -p cybercore-theme-studio
+```
+
+It exposes its creator API on that local server: `GET /api/themes`,
+`POST /api/themes`, `DELETE /api/themes/:id`, `POST /api/themes/validate`,
+`POST /api/active/:id`, `POST /api/appearance/:mode`, and
+`GET /api/css/:id?appearance=dark|light`. Saved themes are immediately
+available to every app using this catalog and config directory.
 
 ## Current integration scope
 
 The crate owns the document format, validation, catalog, selection, contrast
-report, and CSS generation. Cyberdeck Hub currently provides the visual
-creator and import/export flow. Cyberdesk consumes the shared catalog and
+report, and CSS generation. Cybercore Theme Studio provides the universal
+visual creator. Cyberdeck Hub and Cyberdesk consume the shared catalog and
 custom themes. Other applications can adopt the same engine incrementally;
 older palette consumers continue to work with the original roles.

@@ -44,5 +44,9 @@ required-features = ["status"]
 [package.metadata.docs.rs]
 all-features = true
 
+[workspace]
+members = ["theme-studio"]
+resolver = "2"
+
 [build-dependencies]
 serde_json = "1"

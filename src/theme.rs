@@ -44,9 +44,10 @@ pub struct ThemeMetadata {
     pub author: String,
 }
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Clone, Copy, Default, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
 #[serde(rename_all = "lowercase")]
 pub enum Appearance {
+    #[default]
     Dark,
     Light,
 }
@@ -57,12 +58,6 @@ impl Appearance {
             Self::Dark => "dark",
             Self::Light => "light",
         }
-    }
-}
-
-impl Default for Appearance {
-    fn default() -> Self {
-        Self::Dark
     }
 }
 

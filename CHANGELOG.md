@@ -9,6 +9,11 @@ All notable changes to `cybercore` are documented in this file.
 - `cybercore::theme`: versioned portable theme documents, validation,
   dark/light palette variants, allowlisted design tokens, contrast reports,
   CSS generation, built-in family metadata, and shared user theme storage.
+- `cybercore-theme-studio` workspace binary: standalone local visual editor
+  with library selection, CRUD, dark/light editing, import/export, preview,
+  and contrast feedback.
+- CI now checks, lints, and tests every workspace package so Theme Studio is
+  included in the standard Actions workflow.
 - `docs/theme-engine.md` with the theme JSON contract, Rust API, storage
   precedence, and current app integration scope.
 - `status` feature: the Cybercore tool status contract (`schema/status.json`)

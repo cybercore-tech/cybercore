@@ -1,0 +1,20 @@
+[package]
+name = "cybercore-theme-studio"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.85"
+description = "Standalone local theme creator for the Cybercore Systems Framework"
+license = "MIT"
+repository = "https://github.com/cybercore-tech/cybercore"
+publish = false
+
+[[bin]]
+name = "cybercore-theme-studio"
+path = "src/main.rs"
+
+[dependencies]
+axum = "0.7"
+cybercore = { path = ".." }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tokio = { version = "1", features = ["macros", "rt-multi-thread", "net"] }
