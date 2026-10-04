@@ -6,6 +6,11 @@ All notable changes to `cybercore` are documented in this file.
 
 ### Added
 
+- `cybercore::theme`: versioned portable theme documents, validation,
+  dark/light palette variants, allowlisted design tokens, contrast reports,
+  CSS generation, built-in family metadata, and shared user theme storage.
+- `docs/theme-engine.md` with the theme JSON contract, Rust API, storage
+  precedence, and current app integration scope.
 - `status` feature: the Cybercore tool status contract (`schema/status.json`)
   and `cybercore::status`, with `ToolStatus`, `Health`, `Metric`, `Event`,
   `Action` and atomic `write` / `write_in`, plus `read`, `path`, `dir` and

@@ -71,6 +71,34 @@ components`. Every Cybercore surface pulls the same `--font-mono`,
 `--fs-*`, `--space-*`, `--radius-*` so a new site or tool matches the
 rest without copy-paste.
 
+## CYBERGRID theme engine — since v0.6.0
+
+The `cybercore::theme` module turns the embedded palette collection into a
+shared runtime catalog. It keeps the existing eleven color roles for current
+apps, adds optional light appearance variants and validated design tokens,
+and stores user themes outside the binary so every Cybercore app can use them.
+
+```rust
+use cybercore::theme::{Appearance, ThemeCatalog};
+
+let mut themes = ThemeCatalog::load()?;
+let active = themes.get(themes.active_id()).expect("active theme");
+let css = active.document.to_css(themes.active_appearance());
+themes.select("tokyo-night")?;
+```
+
+Theme documents are portable JSON: they include a stable id, metadata,
+palette, optional `variants.light`, and typography/density/corners/motion
+settings. Legacy flat palette JSON remains importable. Custom themes are saved
+under `$XDG_CONFIG_HOME/cybercore/themes/` (or `~/.config/cybercore/themes/`);
+set `CYBERCORE_CONFIG_DIR` to override the shared config root. The selected
+theme and dark/light appearance are recorded in `active-theme.json`.
+
+The Hub exposes the same catalog through its theme picker and creator, with
+JSON import/export, contrast feedback, and shared persistence. See
+[`docs/theme-engine.md`](docs/theme-engine.md) for the document contract,
+storage rules, API, and integration notes.
+
 ## For Rust projects
 
 Add as a dependency:
@@ -165,6 +193,7 @@ dependencies can pin to a known-good version rather than tracking
     schema/cybergrid.json   — the actual source of truth
     src/lib.rs               — module declarations
     src/schema.rs            — embeds + parses the JSON once per process
+    src/theme.rs             — versioned themes, shared catalog, validation + CSS
     src/palette.rs           — true-color ANSI helpers + raw hex accessor
     src/paths.rs              — canonical filesystem locations, ~-expanded
 

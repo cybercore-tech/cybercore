@@ -15,13 +15,13 @@
 //! that just read `schema::load().palette.bg` keep working. New
 //! callers can pick any theme by name with [`Schema::theme`].
 
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use std::sync::OnceLock;
 
 /// One theme: 11 semantic colour roles, each a bare 6-digit hex string
 /// (no leading `#`).
-#[derive(Debug, Deserialize, Clone, Default)]
+#[derive(Debug, Deserialize, Serialize, Clone, Default, PartialEq, Eq)]
 pub struct Palette {
     pub bg: String,
     pub white: String,
@@ -46,6 +46,10 @@ pub struct Schema {
     pub active: String,
     /// every theme, keyed by slug
     pub themes: BTreeMap<String, Palette>,
+    /// Family name for each embedded theme, preserved from its source
+    /// directory instead of being guessed from its slug by consumers.
+    #[serde(default)]
+    pub theme_families: BTreeMap<String, String>,
     pub paths: Paths,
 
     /// The resolved active theme — filled in by [`load`], not present in
@@ -72,6 +76,11 @@ impl Schema {
     /// All theme slugs, sorted.
     pub fn theme_names(&self) -> impl Iterator<Item = &str> {
         self.themes.keys().map(String::as_str)
+    }
+
+    /// The source family for an embedded theme, if one was recorded.
+    pub fn theme_family(&self, name: &str) -> Option<&str> {
+        self.theme_families.get(name).map(String::as_str)
     }
 }
 

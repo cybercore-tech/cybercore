@@ -18,4 +18,5 @@ pub mod paths;
 pub mod schema;
 #[cfg(feature = "status")]
 pub mod status;
+pub mod theme;
 pub mod tokens;
