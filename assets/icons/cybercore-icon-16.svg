@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" role="img" aria-labelledby="t">
+<title id="t">Cybercore icon 16px</title>
+<rect width="16.00" height="16.00" rx="3.50" fill="#0E091D"/>
+<path d="M 8.00 2.80 A 5.20 5.20 0 0 1 12.46 5.32" stroke="#12E5DE" stroke-width="1.60" fill="none" stroke-linecap="round"/>
+<path d="M 12.95 6.39 A 5.20 5.20 0 0 1 11.93 11.41" stroke="#B6FF3C" stroke-width="1.60" fill="none" stroke-linecap="round"/>
+<path d="M 11.06 12.21 A 5.20 5.20 0 0 1 5.97 12.79" stroke="#FF6A1A" stroke-width="1.60" fill="none" stroke-linecap="round"/>
+<path d="M 4.94 12.21 A 5.20 5.20 0 0 1 2.82 7.55" stroke="#FF2158" stroke-width="1.60" fill="none" stroke-linecap="round"/>
+<path d="M 3.05 6.39 A 5.20 5.20 0 0 1 6.83 2.93" stroke="#B44DFF" stroke-width="1.60" fill="none" stroke-linecap="round"/>
+<path d="M 9.74 4.99 L 11.47 8.00 L 9.74 11.01 L 6.26 11.01 L 4.53 8.00 L 6.26 4.99 Z" fill="#1B1236" stroke="#F5F3FF" stroke-width="1.30"/>
+<path d="M 9.14 8.80 A 1.39 1.39 0 1 1 9.14 7.20" stroke="#F5F3FF" stroke-width="1.96" fill="none" stroke-linecap="round"/>
+</svg>
