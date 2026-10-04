@@ -45,18 +45,21 @@ async fn local_host_only(request: Request<Body>, next: Next) -> Response {
         .headers()
         .get(header::HOST)
         .and_then(|value| value.to_str().ok())
-        .and_then(|value| value.parse::<axum::http::uri::Authority>().ok())
-        .map(|authority| {
-            matches!(
-                authority.host().to_ascii_lowercase().as_str(),
-                "localhost" | "127.0.0.1" | "::1" | "[::1]"
-            )
-        })
+        .map(is_local_host)
         .unwrap_or(false);
     if !allowed {
         return (StatusCode::FORBIDDEN, "local host required").into_response();
     }
     next.run(request).await
+}
+
+fn is_local_host(value: &str) -> bool {
+    let Ok(authority) = value.parse::<axum::http::uri::Authority>() else {
+        return false;
+    };
+    let host = authority.host().to_ascii_lowercase();
+    matches!(host.as_str(), "localhost" | "127.0.0.1" | "::1" | "[::1]")
+        || host.ends_with(".localhost")
 }
 
 async fn index() -> Html<&'static str> {
@@ -207,4 +210,28 @@ async fn theme_css(Path(id): Path<String>, Query(query): Query<CssQuery>) -> Res
             .to_css(query.appearance.unwrap_or(catalog.active_appearance())),
     )
         .into_response()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::is_local_host;
+
+    #[test]
+    fn permits_loopback_hostnames_and_ports() {
+        for host in [
+            "localhost",
+            "127.0.0.1:8761",
+            "[::1]:8761",
+            "cybercore-tech.localhost:8762",
+        ] {
+            assert!(is_local_host(host), "expected {host} to be local");
+        }
+    }
+
+    #[test]
+    fn rejects_non_loopback_and_suffix_spoofed_hosts() {
+        for host in ["cybercore-tech.localhost.example.com", "example.com:8761"] {
+            assert!(!is_local_host(host), "expected {host} to be rejected");
+        }
+    }
 }

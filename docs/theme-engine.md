@@ -114,6 +114,11 @@ The workspace package `cybercore-theme-studio` runs a standalone creator at
 cargo run -p cybercore-theme-studio
 ```
 
+Studio accepts `localhost`, loopback IPs, and names under `.localhost` in the
+request `Host` header. A friendly URL such as
+`http://cybercore-tech.localhost:8761/` therefore works without changing the
+machine's hosts file; the listener remains restricted to loopback.
+
 It exposes its creator API on that local server: `GET /api/themes`,
 `POST /api/themes`, `DELETE /api/themes/:id`, `POST /api/themes/validate`,
 `POST /api/active/:id`, `POST /api/appearance/:mode`, and

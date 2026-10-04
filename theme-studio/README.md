@@ -14,9 +14,11 @@ cargo run -p cybercore-theme-studio
 ```
 
 Then open <http://127.0.0.1:8761/>. The server only binds to loopback and
-rejects unexpected `Host` headers. Set `CYBERCORE_THEME_STUDIO_BIND` to use a
-different loopback address or port. Cyberdeck Hub has a **Theme Studio** link
-to the default URL.
+rejects unexpected `Host` headers. For a friendly local hostname, a name under
+`.localhost` (for example, `http://cybercore-tech.localhost:8761/`) is accepted
+and resolves to loopback without a hosts-file change. Set
+`CYBERCORE_THEME_STUDIO_BIND` to use a different loopback address or port.
+Cyberdeck Hub has a **Theme Studio** link to the default URL.
 
 The editor supports built-in and custom themes, dark and optional light
 palettes, typography, density, corners, and motion tokens. It validates theme
