@@ -95,6 +95,8 @@
         </div>
         <div class="field"><label for="pack-policy">Theme pack conflicts</label><select id="pack-policy"><option value="reject">Reject if IDs exist</option><option value="skip">Skip existing themes</option><option value="replace_custom">Replace matching custom themes</option></select></div>
         <div class="actions"><button id="import-pack" type="button">Install theme pack</button><button id="export-pack" type="button">Export family pack</button><input id="pack-file" type="file" accept=".json,.cyberpack.json,application/json" hidden></div>
+        <div class="field"><label for="curated-pack">Curated pack library</label><select id="curated-pack" aria-label="Choose a curated Cybercore theme pack"></select></div>
+        <div class="actions"><button id="install-curated-pack" type="button">Add collection to my library</button></div>
       </section>
       <section class="panel preview" aria-labelledby="preview-title">
         <div class="preview-head"><div><div class="eyebrow">Live preview</div><h2 id="preview-title">Sample workspace</h2></div><span class="badge">SYSTEM ONLINE</span></div>
@@ -254,6 +256,21 @@ async function importPack(file) {
   } catch(error) { message('Could not install pack: '+error.message,'error'); }
   finally { el('pack-file').value=''; }
 }
+async function loadCuratedLibrary() {
+  const library=await request('/api/library');
+  el('curated-pack').replaceChildren(...library.packs.map(pack=>{const option=document.createElement('option');option.value=pack.id;option.textContent=pack.name+' · '+pack.theme_count+' themes';option.title=pack.description;return option;}));
+}
+async function installCuratedPack() {
+  const id=el('curated-pack').value;
+  if(!id)return;
+  const pack=el('curated-pack').selectedOptions[0]?.textContent || id;
+  if(!confirm('Add '+pack+' as a custom collection? Existing themes and your active selection stay unchanged.'))return;
+  try {
+    const result=await request('/api/library/'+encodeURIComponent(id)+'/install',{method:'POST'});
+    await refreshLibrary();
+    message('Added curated-'+id+': '+result.imported.length+' themes copied to your library.','ok');
+  } catch(error) { message('Could not add curated collection: '+error.message,'error'); }
+}
 
 function buildSwatches() {
   el('swatches').replaceChildren(...keys.map(key=>{const label=document.createElement('label');label.className='swatch';const title=document.createElement('span');title.textContent=key.replace('_',' ');const color=document.createElement('input');color.type='color';color.id='color-'+key;color.setAttribute('aria-label',key.replace('_',' ')+' color picker');const hex=document.createElement('input');hex.type='text';hex.id='hex-'+key;hex.value='888888';hex.maxLength=7;hex.autocomplete='off';hex.spellcheck=false;hex.setAttribute('aria-label',key.replace('_',' ')+' hex color');color.addEventListener('input',()=>{hex.value=color.value.slice(1).toUpperCase();preview();});hex.addEventListener('input',()=>{const value=hex.value.trim().replace(/^#/,'');if(/^[0-9a-f]{6}$/i.test(value)){color.value='#'+value;preview();}});label.append(title,color,hex);return label;}));
@@ -268,7 +285,8 @@ el('load-theme').addEventListener('click',()=>{const selected=themes.find(theme=
 el('new-theme').addEventListener('click',newTheme);el('duplicate-theme').addEventListener('click',duplicateTheme);el('save-theme').addEventListener('click',saveTheme);el('delete-theme').addEventListener('click',deleteTheme);
 el('import-theme').addEventListener('click',()=>el('file').click());el('file').addEventListener('change',event=>importTheme(event.target.files[0]));el('export-theme').addEventListener('click',exportTheme);
 el('export-pack').addEventListener('click',exportPack);el('import-pack').addEventListener('click',()=>el('pack-file').click());el('pack-file').addEventListener('change',event=>importPack(event.target.files[0]));
-refreshLibrary().then(()=>newTheme()).catch(error=>message(error.message,'error'));
+el('install-curated-pack').addEventListener('click',installCuratedPack);
+Promise.all([refreshLibrary().then(()=>newTheme()),loadCuratedLibrary()]).catch(error=>message(error.message,'error'));
 </script>
 </body>
 </html>

@@ -159,6 +159,13 @@ Cybercore consumers.
 
 ## Current integration scope
 
+Theme Studio's curated library (`GET /api/library`) lists the reviewed
+embedded theme families. **Add collection to my library** copies a chosen
+family into the custom catalog using `curated-<family>-<theme-id>` IDs and a
+`curated-<family>` family name. Built-ins are unchanged, repeat installs skip
+already-copied IDs, and the current active theme is not changed. The install
+endpoint is `POST /api/library/:family/install`.
+
 The crate owns the document format, validation, catalog, selection, contrast
 report, and CSS generation. Cybercore Theme Studio provides the universal
 visual creator. Cyberdeck Hub and Cyberdesk consume the shared catalog and

@@ -24,6 +24,8 @@ async fn main() {
         .route("/api/themes/:id", delete(delete_theme))
         .route("/api/themes/validate", post(validate_theme))
         .route("/api/packs", get(list_packs).post(import_pack))
+        .route("/api/library", get(curated_library))
+        .route("/api/library/:id/install", post(install_curated_pack))
         .route("/api/packs/export", get(export_pack))
         .route("/api/packs/validate", post(validate_pack))
         .route("/api/active/:id", post(select_theme))
@@ -126,6 +128,76 @@ async fn list_packs() -> Response {
         "packs": families.into_iter().map(|(family, count)| json!({"family": family, "theme_count": count})).collect::<Vec<_>>()
     }))
     .into_response()
+}
+
+/// Curated packs are selected from Cybercore's reviewed embedded families.
+/// They are copied into the user's catalog with namespaced IDs on install.
+async fn curated_library() -> Response {
+    let catalog = match ThemeCatalog::load() {
+        Ok(catalog) => catalog,
+        Err(error) => return catalog_error(error),
+    };
+    let mut families = std::collections::BTreeMap::<String, usize>::new();
+    for (_, entry) in catalog.iter().filter(|(_, entry)| entry.builtin) {
+        *families
+            .entry(entry.document.metadata.family.clone())
+            .or_default() += 1;
+    }
+    Json(json!({"packs": families.into_iter().map(|(id, theme_count)| json!({
+        "id": id,
+        "name": format!("{} collection", id.split('-').map(|word| {
+            let mut chars = word.chars();
+            chars.next().map(|first| first.to_uppercase().collect::<String>() + chars.as_str()).unwrap_or_default()
+        }).collect::<Vec<_>>().join(" ")),
+        "description": format!("Curated Cybercore themes from the {id} collection."),
+        "theme_count": theme_count,
+    })).collect::<Vec<_>>() })).into_response()
+}
+
+async fn install_curated_pack(Path(id): Path<String>) -> Response {
+    let mut catalog = match ThemeCatalog::load() {
+        Ok(catalog) => catalog,
+        Err(error) => return catalog_error(error),
+    };
+    let themes: Vec<_> = catalog
+        .iter()
+        .filter(|(_, entry)| entry.builtin && entry.document.metadata.family == id)
+        .map(|(_, entry)| entry.document.clone())
+        .collect();
+    if themes.is_empty() {
+        return (
+            StatusCode::NOT_FOUND,
+            Json(json!({"error":"curated pack not found"})),
+        )
+            .into_response();
+    }
+    let pack = namespaced_curated_pack(&id, themes);
+    let count = pack.themes.len();
+    match catalog.import_pack(pack, PackConflictPolicy::Skip) {
+        Ok(report) => (StatusCode::CREATED, Json(json!({"family":format!("curated-{id}"),"imported":report.imported,"skipped":report.skipped,"theme_count":count}))).into_response(),
+        Err(error) => pack_error(error),
+    }
+}
+
+fn namespaced_curated_pack(id: &str, mut themes: Vec<ThemeDocument>) -> ThemePackDocument {
+    for theme in &mut themes {
+        let original_id = theme.metadata.id.clone();
+        theme.metadata.id = format!("curated-{id}-{original_id}")
+            .chars()
+            .take(64)
+            .collect();
+        theme.metadata.family = format!("curated-{id}");
+    }
+    ThemePackDocument {
+        format_version: cybercore::theme::THEME_PACK_FORMAT_VERSION,
+        metadata: cybercore::theme::ThemePackMetadata {
+            id: format!("curated-{id}"),
+            name: format!("Curated {} Collection", id),
+            description: format!("A user-installable copy of the reviewed {id} theme family."),
+            author: "Cybercore".into(),
+        },
+        themes,
+    }
 }
 
 #[derive(Deserialize)]
@@ -301,7 +373,7 @@ async fn theme_css(Path(id): Path<String>, Query(query): Query<CssQuery>) -> Res
 
 #[cfg(test)]
 mod tests {
-    use super::is_local_host;
+    use super::{is_local_host, namespaced_curated_pack, ThemeDocument};
 
     #[test]
     fn permits_loopback_hostnames_and_ports() {
@@ -320,5 +392,32 @@ mod tests {
         for host in ["cybercore-tech.localhost.example.com", "example.com:8761"] {
             assert!(!is_local_host(host), "expected {host} to be rejected");
         }
+    }
+
+    #[test]
+    fn curated_pack_copies_embedded_themes_with_valid_isolated_ids() {
+        let schema = cybercore::schema::load();
+        let themes = schema
+            .themes
+            .iter()
+            .filter(|(id, _)| {
+                schema
+                    .theme_family(id)
+                    .is_some_and(|family| family == "cyberpunk")
+            })
+            .map(|(id, palette)| {
+                let mut document = ThemeDocument::new(id, id, palette.clone());
+                document.metadata.family = "cyberpunk".into();
+                document
+            })
+            .collect();
+        let pack = namespaced_curated_pack("cyberpunk", themes);
+        pack.validate().unwrap();
+        assert_eq!(pack.metadata.id, "curated-cyberpunk");
+        assert!(!pack.themes.is_empty());
+        assert!(pack.themes.iter().all(|theme| {
+            theme.metadata.id.starts_with("curated-cyberpunk-")
+                && theme.metadata.family == "curated-cyberpunk"
+        }));
     }
 }

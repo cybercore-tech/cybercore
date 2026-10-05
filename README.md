@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/header-neon.svg" width="900" alt="Cybercore — schema, palette, tokens and paths: 73 themes, one source of truth">
+  <img src="assets/header-neon.svg" width="900" alt="Cybercore — schema, palette, tokens and paths: 81 themes, one source of truth">
 </p>
 
 <p align="center">
@@ -71,7 +71,15 @@ components`. Every Cybercore surface pulls the same `--font-mono`,
 `--fs-*`, `--space-*`, `--radius-*` so a new site or tool matches the
 rest without copy-paste.
 
-## CYBERGRID theme engine — since v0.6.0
+## Shared design-system components
+
+The reusable components are served as `cybercore::components::CSS` and cover
+window chrome, theme pickers, tables, controls, empty states, rendered
+markdown, and modal viewers. See the
+[design-system guide](docs/design-system.md) for the load order and class
+contract.
+
+## CYBERGRID theme engine — since v0.7.0
 
 The `cybercore::theme` module turns the embedded palette collection into a
 shared runtime catalog. It keeps the existing eleven color roles for current
@@ -115,7 +123,7 @@ Add as a dependency:
 
 ```toml
 [dependencies]
-cybercore = "0.6"
+cybercore = "0.7"
 ```
 
 Requires Rust 1.85 or newer. For local development against an unpublished
@@ -197,6 +205,8 @@ the new field yet, nothing errors.
 Tag releases (`v0.1.0`, `v0.2.0`, ...) so downstream `Cargo.toml`
 dependencies can pin to a known-good version rather than tracking
 `main` directly.
+The crate release workflow and required checks are documented in
+[docs/releasing.md](docs/releasing.md).
 
 ## Layout
 

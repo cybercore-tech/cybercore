@@ -25,6 +25,13 @@ palettes, typography, density, corners, and motion tokens. It validates theme
 documents and displays contrast feedback, and can import legacy flat palette
 JSON or import/export versioned theme documents.
 
+The **Curated pack library** offers the checked-in Cybercore theme families
+as collections. **Add collection to my library** copies the selected family
+under `curated-<family>` with namespaced IDs; it leaves embedded themes and
+the active selection alone. Repeating the action safely skips themes already
+copied. The library endpoints are `GET /api/library` and
+`POST /api/library/:family/install`.
+
 Themes and active selection use the same storage contract documented in the
 [Cybercore theme engine guide](../docs/theme-engine.md):
 `$XDG_CONFIG_HOME/cybercore` or `~/.config/cybercore`, with

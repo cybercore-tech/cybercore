@@ -20,3 +20,6 @@ pub mod schema;
 pub mod status;
 pub mod theme;
 pub mod tokens;
+
+#[cfg(test)]
+mod quality_tests;

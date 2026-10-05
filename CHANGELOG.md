@@ -2,23 +2,37 @@
 
 All notable changes to `cybercore` are documented in this file.
 
-## [0.6.0] - Unreleased
+## [0.7.0] - Unreleased
 
 ### Added
 
 - `cybercore::theme`: versioned portable theme documents, validation,
   dark/light palette variants, allowlisted design tokens, contrast reports,
-  CSS generation, built-in family metadata, and shared user theme storage.
+  CSS generation, built-in family metadata, shared storage, and safe theme-pack
+  import/export.
 - `cybercore-theme-studio` workspace binary: standalone local visual editor
   with library selection, CRUD, dark/light editing, import/export, preview,
   and contrast feedback.
+- `docs/theme-engine.md` with the theme JSON contract, Rust API, storage
+  precedence, pack format, and cross-app integration scope.
+- Theme Studio's curated pack library can copy reviewed built-in families into
+  the user's catalog with isolated IDs, leaving built-ins and active selection
+  untouched.
+- Cyberdeck Hub, DaemonHall, Cyberdesk, Dockspace, and Cyberterm refresh
+  shared theme changes while running; web pages update when visible and
+  Cyberterm refreshes its catalog every two seconds.
+- Release-gate tests validate every embedded theme and assert the shared
+  component CSS contract.
+- CI verifies the declared Rust 1.85 minimum alongside stable.
+- `docs/design-system.md` documents component loading order and the reusable
+  CSS class contract.
+
+## [0.6.0] - 2026-10-04
+
+### Added
+
 - CI now checks, lints, and tests every workspace package so Theme Studio is
   included in the standard Actions workflow.
-- `docs/theme-engine.md` with the theme JSON contract, Rust API, storage
-  precedence, and current app integration scope.
-- Cross-app web consumers (Cyberdeck Hub, DaemonHall, Cyberdesk, and
-  Dockspace) refresh shared theme selection and appearance while pages remain
-  open; installed catalog entries refresh the picker without service restarts.
 - `status` feature: the Cybercore tool status contract (`schema/status.json`)
   and `cybercore::status`, with `ToolStatus`, `Health`, `Metric`, `Event`,
   `Action` and atomic `write` / `write_in`, plus `read`, `path`, `dir` and
@@ -32,8 +46,6 @@ All notable changes to `cybercore` are documented in this file.
     `_`.
   - Off by default, so cybercore without `status` still depends only on serde.
 - `publish_status` example (`--features status`).
-
- - Unreleased
 
 ### Added
 
