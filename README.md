@@ -103,7 +103,9 @@ storage rules, API, and integration notes.
 Studio provides live previews, per-appearance contrast feedback, stable-ID
 editing for custom themes, and **Duplicate as new** to safely derive themes
 from built-ins or existing custom themes. Imports remain drafts until saved;
-built-in themes cannot be overwritten.
+built-in themes cannot be overwritten. The Studio uses the active CYBERGRID
+palette for its own interface, groups themes into editable family packs, and
+accepts both color-picker and direct hex input for each semantic color.
 
 ## For Rust projects
 

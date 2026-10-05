@@ -132,7 +132,11 @@ from any built-in or custom theme without overwriting the source. **New**
 starts a draft using the currently active palette. Import loads a draft and
 does not write it until Save; export downloads the current draft as JSON.
 The live sample preview and contrast report update as you edit either
-appearance variant.
+appearance variant. Studio itself follows the active shared CYBERGRID palette
+and Cyberdeck's scanline, glow, compact chrome, and monospaced control styling.
+The theme library groups entries by family; the **Theme pack** field can
+select an existing family or define a new one. Each of the eleven semantic
+colors can be set with a color picker or a direct six-digit hex value.
 
 ## Current integration scope
 
