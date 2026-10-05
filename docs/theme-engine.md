@@ -162,5 +162,15 @@ Cybercore consumers.
 The crate owns the document format, validation, catalog, selection, contrast
 report, and CSS generation. Cybercore Theme Studio provides the universal
 visual creator. Cyberdeck Hub and Cyberdesk consume the shared catalog and
-custom themes. Other applications can adopt the same engine incrementally;
-older palette consumers continue to work with the original roles.
+custom themes. DaemonHall and Dockspace use the same catalog and CSS adapter.
+These web clients poll their local catalog endpoint every two seconds while
+visible, so selecting or editing a theme in Theme Studio or another app
+updates the open page without restarting services. A newly installed theme
+refreshes the picker on the next poll. Native apps such as Cyberterm need a
+runtime-specific refresh adapter; the shared catalog itself is immediately
+available to them through `ThemeCatalog::load`.
+
+Consumers should pin a released `cybercore` version for reproducible builds.
+During development, pinning a reviewed Git revision is supported; updating a
+consumer's dependency revision does not require changing the theme document
+format.

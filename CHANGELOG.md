@@ -16,6 +16,9 @@ All notable changes to `cybercore` are documented in this file.
   included in the standard Actions workflow.
 - `docs/theme-engine.md` with the theme JSON contract, Rust API, storage
   precedence, and current app integration scope.
+- Cross-app web consumers (Cyberdeck Hub, DaemonHall, Cyberdesk, and
+  Dockspace) refresh shared theme selection and appearance while pages remain
+  open; installed catalog entries refresh the picker without service restarts.
 - `status` feature: the Cybercore tool status contract (`schema/status.json`)
   and `cybercore::status`, with `ToolStatus`, `Health`, `Metric`, `Event`,
   `Action` and atomic `write` / `write_in`, plus `read`, `path`, `dir` and
