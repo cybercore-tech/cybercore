@@ -1,0 +1,48 @@
+name: Consumer compatibility
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 8 * * 1"
+
+permissions:
+  contents: read
+
+jobs:
+  consumer:
+    name: ${{ matrix.name }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Cyberdeck Hub
+            repository: cybercore-tech/cyberdeck-hub
+            manifest: Cargo.toml
+          - name: DaemonHall
+            repository: cybercore-tech/DaemonHall
+            manifest: Cargo.toml
+          - name: Cyberdesk
+            repository: cybercore-tech/cyberdesk
+            manifest: Cargo.toml
+          - name: Dockspace
+            repository: cybercore-tech/dockspace
+            manifest: Cargo.toml
+          - name: Cyberterm
+            repository: cybercore-tech/cyberterm
+            manifest: Cargo.toml
+    steps:
+      - name: Checkout consumer
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ matrix.repository }}
+          path: consumer
+          persist-credentials: false
+      - name: Install stable Rust
+        uses: dtolnay/rust-toolchain@stable
+      - name: Cache Rust
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: consumer -> target
+      - name: Test consumer against released Cybercore
+        run: cargo test --locked --all-targets --manifest-path "consumer/${{ matrix.manifest }}"

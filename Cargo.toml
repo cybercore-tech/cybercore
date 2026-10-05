@@ -1,6 +1,6 @@
 [package]
 name = "cybercore"
-version = "0.7.0"
+version = "0.8.0"
 edition = "2021"
 rust-version = "1.85"
 description = "Shared config schema, palette, design tokens, and path conventions for the Cybercore Systems Framework"
@@ -41,6 +41,10 @@ status = ["dep:chrono", "dep:hostname"]
 [[example]]
 name = "publish_status"
 required-features = ["status"]
+
+[[bin]]
+name = "cybercore-theme"
+path = "src/bin/cybercore-theme.rs"
 
 [package.metadata.docs.rs]
 all-features = true

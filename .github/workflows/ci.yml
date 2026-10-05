@@ -57,6 +57,11 @@ jobs:
       - name: Test
         run: cargo test --workspace --all-targets --all-features
 
+      - name: Enforce theme quality and pack validation gates
+        run: |
+          cargo run --locked --bin cybercore-theme -- check examples/fixtures/high-contrast-theme.json --strict
+          cargo run --locked --bin cybercore-theme -- validate-pack examples/fixtures/release-pack.cyberpack.json
+
       - name: Test rustdoc
         run: cargo test --workspace --doc --all-features
 

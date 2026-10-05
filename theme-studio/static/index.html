@@ -40,6 +40,10 @@
     .sample-card h3 { margin:.2rem 0 .5rem; }.sample-card p { color:var(--muted); }.mono { font-family:var(--font-mono); }
     .badge { display:inline-block; border-radius:2px; padding:.2rem .55rem; color:var(--acid); background:color-mix(in srgb,var(--acid) 12%,transparent); border:1px solid color-mix(in srgb,var(--acid) 38%,transparent); font-size:.72rem; text-transform:uppercase; letter-spacing:.08em; }
     .palette-strip { display:flex; gap:.4rem; margin-top:1rem; flex-wrap:wrap; }.palette-strip i { width:2.2rem; height:2.2rem; border-radius:var(--radius); border:1px solid #ffffff22; }
+    #pack-preview { display:grid; gap:.35rem; padding:.7rem; margin-top:.5rem; border:1px solid var(--line); background:var(--bg); color:var(--muted); font-size:.78rem; }
+    #pack-preview[hidden] { display:none; }
+    #pack-preview .pack-swatches { display:flex; gap:.3rem; }
+    #pack-preview .pack-swatches i { width:1.5rem; height:1.5rem; border:1px solid var(--line); border-radius:var(--radius); }
     #contrast { color:color-mix(in srgb,var(--fg) 76%,var(--bg)); min-height:1.5rem; font-size:.82rem; }.theme-row { display:flex; gap:.5rem; align-items:center; }.theme-row select { flex:1; }
     #contrast.warning { color:var(--orange); }
     .status { min-height:1.3rem; color:color-mix(in srgb,var(--fg) 76%,var(--bg)); font-size:.85rem; }.status.error { color:var(--pink); }.status.ok { color:var(--acid); }
@@ -96,6 +100,7 @@
         <div class="field"><label for="pack-policy">Theme pack conflicts</label><select id="pack-policy"><option value="reject">Reject if IDs exist</option><option value="skip">Skip existing themes</option><option value="replace_custom">Replace matching custom themes</option></select></div>
         <div class="actions"><button id="import-pack" type="button">Install theme pack</button><button id="export-pack" type="button">Export family pack</button><input id="pack-file" type="file" accept=".json,.cyberpack.json,application/json" hidden></div>
         <div class="field"><label for="curated-pack">Curated pack library</label><select id="curated-pack" aria-label="Choose a curated Cybercore theme pack"></select></div>
+        <div id="pack-preview" aria-live="polite" hidden></div>
         <div class="actions"><button id="install-curated-pack" type="button">Add collection to my library</button></div>
       </section>
       <section class="panel preview" aria-labelledby="preview-title">
@@ -154,7 +159,8 @@ async function validateDraft(run) {
     const result = editMode === 'light' ? (report.light_contrast || report.contrast) : report.contrast;
     const failed = (result?.checks || []).filter(check=>!check.passes);
     el('contrast').classList.toggle('warning',failed.length>0);
-    el('contrast').textContent = failed.length ? 'Contrast needs attention: '+failed.map(check=>check.label+' '+check.ratio.toFixed(2)+':1').join(', ') : 'Common text and accent contrast checks pass.';
+    const fallback = report.quality?.has_explicit_light_variant === false ? ' Light mode currently falls back to the base palette.' : '';
+    el('contrast').textContent = failed.length ? 'Contrast needs attention: '+failed.map(check=>check.label+' '+check.ratio.toFixed(2)+':1').join(', ')+fallback : 'Common text, focus, border, and accent contrast checks pass.'+fallback;
   } catch (error) { if (run === validationRun) {el('contrast').classList.remove('warning');el('contrast').textContent=error.message;} }
 }
 async function refreshLibrary(preferred=activeId) {
@@ -246,6 +252,7 @@ async function importPack(file) {
   try {
     const pack=JSON.parse(await file.text());
     const preview=await request('/api/packs/validate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(pack)});
+    showPackPreview(preview.metadata || pack.metadata);
     const policy=el('pack-policy').value, conflicts=preview.conflicts.custom.length+preview.conflicts.builtin.length;
     if(conflicts && policy==='reject') { message('Pack validated, but '+conflicts+' theme IDs already exist. Choose a conflict policy before installing.','error');return; }
     const policyLabel={skip:'skip existing themes',replace_custom:'replace matching custom themes',reject:'reject conflicts'}[policy];
@@ -258,8 +265,24 @@ async function importPack(file) {
 }
 async function loadCuratedLibrary() {
   const library=await request('/api/library');
-  el('curated-pack').replaceChildren(...library.packs.map(pack=>{const option=document.createElement('option');option.value=pack.id;option.textContent=pack.name+' · '+pack.theme_count+' themes';option.title=pack.description;return option;}));
+  curatedPacks=library.packs;
+  el('curated-pack').replaceChildren(...curatedPacks.map(pack=>{const option=document.createElement('option');option.value=pack.id;option.textContent=pack.name+' · '+pack.theme_count+' themes';option.title=pack.description;return option;}));
+  showPackPreview(curatedPacks[0]?.metadata);
 }
+const studioThemeEvents=new EventSource('/api/events');
+studioThemeEvents.addEventListener('theme-change',()=>refreshLibrary(el('theme-picker').value).catch(error=>console.debug('Shared theme refresh deferred',error)));
+let curatedPacks=[];
+function showPackPreview(metadata) {
+  const target=el('pack-preview');
+  if(!metadata){target.hidden=true;target.replaceChildren();return;}
+  target.hidden=false;
+  const title=document.createElement('strong');title.textContent=(metadata.name || 'Theme pack')+' · v'+(metadata.version || '1.0.0');
+  const details=document.createElement('span');details.textContent=[metadata.author || 'Unknown author',metadata.license || 'License unspecified','Cybercore '+(metadata.compatibility || 'compatibility unspecified')].join(' · ');
+  const swatches=document.createElement('span');swatches.className='pack-swatches';swatches.setAttribute('aria-label','Pack palette preview');
+  for(const color of (metadata.preview || []).slice(0,5)){if(!/^#?[0-9a-f]{6}$/i.test(color))continue;const swatch=document.createElement('i');swatch.style.backgroundColor='#'+color.replace(/^#/,'');swatch.title=color;swatches.append(swatch);}
+  target.replaceChildren(title,details,swatches);
+}
+el('curated-pack').addEventListener('change',()=>showPackPreview(curatedPacks.find(pack=>pack.id===el('curated-pack').value)?.metadata));
 async function installCuratedPack() {
   const id=el('curated-pack').value;
   if(!id)return;

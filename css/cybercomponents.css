@@ -462,6 +462,51 @@ select.text-input option {
   border-color: var(--cyan); box-shadow: 0 0 10px color-mix(in srgb, var(--cyan) 30%, transparent);
 }
 
+/* --------------------------------------------------------------------------
+   Shared application patterns: actions, navigation, alerts, tabs, and forms
+   -------------------------------------------------------------------------- */
+.cc-button, .cc-button-primary, .cc-button-danger {
+  display: inline-flex; align-items: center; justify-content: center; gap: .45rem;
+  min-height: 2.4rem; padding: .45rem .85rem; border: 1px solid var(--line);
+  border-radius: var(--radius); background: var(--panel); color: var(--fg);
+  font: inherit; text-decoration: none; cursor: pointer;
+  transition: background-color var(--dur-mid, .15s), border-color var(--dur-mid, .15s), color var(--dur-mid, .15s);
+}
+.cc-button:hover { border-color: var(--cyan); color: var(--cyan); }
+.cc-button-primary { background: color-mix(in srgb, var(--acid) 16%, var(--panel)); border-color: var(--acid); color: var(--acid); }
+.cc-button-primary:hover { background: color-mix(in srgb, var(--acid) 25%, var(--panel)); }
+.cc-button-danger { color: var(--red); border-color: color-mix(in srgb, var(--red) 65%, var(--line)); }
+.cc-button-danger:hover { background: color-mix(in srgb, var(--red) 12%, var(--panel)); }
+.cc-button:disabled, .cc-button-primary:disabled, .cc-button-danger:disabled { opacity: .55; cursor: not-allowed; }
+
+.cc-nav { display: flex; flex-wrap: wrap; align-items: center; gap: .35rem; border-bottom: 1px solid var(--line); }
+.cc-nav a, .cc-nav button { padding: .55rem .8rem; border: 0; border-bottom: 2px solid transparent; background: transparent; color: var(--muted); text-decoration: none; font: inherit; cursor: pointer; }
+.cc-nav [aria-current="page"], .cc-nav [aria-selected="true"] { border-bottom-color: var(--cyan); color: var(--fg); }
+
+.cc-card { min-width: 0; padding: 1rem; border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel); }
+.cc-card > :first-child { margin-top: 0; }
+.cc-card > :last-child { margin-bottom: 0; }
+.cc-card-title { margin: 0 0 .5rem; color: var(--fg); font: 600 1rem/1.35 var(--font-ui); }
+.cc-card-description { color: var(--muted); line-height: 1.55; }
+
+.cc-alert { padding: .75rem 1rem; border: 1px solid var(--line); border-left: 3px solid var(--cyan); border-radius: var(--radius); background: var(--panel); color: var(--fg); }
+.cc-alert[data-tone="success"] { border-left-color: var(--acid); }
+.cc-alert[data-tone="warning"] { border-left-color: var(--orange); }
+.cc-alert[data-tone="danger"] { border-left-color: var(--red); }
+.cc-alert-title { display: block; margin-bottom: .25rem; font-weight: 700; }
+
+.cc-form-field { display: grid; gap: .35rem; min-width: 0; }
+.cc-form-field > label { color: var(--muted); font-size: .8rem; }
+.cc-form-help { color: var(--muted); font-size: .78rem; line-height: 1.45; }
+.cc-form-field :is(input, select, textarea) { width: 100%; min-width: 0; }
+
+:where(button, a, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--cyan); outline-offset: 2px;
+}
+@media (prefers-reduced-motion: reduce) {
+  :where(.cc-button, .cc-button-primary, .cc-button-danger, .theme-item) { scroll-behavior: auto; transition-duration: 0.01ms !important; }
+}
+
 .win-close {
   position: absolute; right: 1rem; top: 50%; transform: translateY(-50%);
   color: var(--muted); text-decoration: none; font-size: 0.85rem;

@@ -3,6 +3,7 @@ use axum::{
     extract::{Path, Query},
     http::{header, Request, StatusCode},
     middleware::{self, Next},
+    response::sse::{Event, KeepAlive, Sse},
     response::{Html, IntoResponse, Response},
     routing::{delete, get, post},
     Json, Router,
@@ -10,9 +11,10 @@ use axum::{
 use cybercore::theme::{
     Appearance, PackConflictPolicy, ThemeCatalog, ThemeDocument, ThemeError, ThemePackDocument,
 };
+use futures_util::stream::{self, Stream};
 use serde::Deserialize;
 use serde_json::{json, Value};
-use std::net::SocketAddr;
+use std::{convert::Infallible, net::SocketAddr, time::Duration};
 
 const PAGE: &str = include_str!("../static/index.html");
 
@@ -21,6 +23,7 @@ async fn main() {
     let app = Router::new()
         .route("/", get(index))
         .route("/api/themes", get(list_themes).post(save_theme))
+        .route("/api/events", get(theme_events))
         .route("/api/themes/:id", delete(delete_theme))
         .route("/api/themes/validate", post(validate_theme))
         .route("/api/packs", get(list_packs).post(import_pack))
@@ -113,6 +116,24 @@ async fn list_themes() -> Response {
     .into_response()
 }
 
+async fn theme_events() -> Sse<impl Stream<Item = Result<Event, Infallible>>> {
+    let events = stream::unfold(None, |last_revision| async move {
+        loop {
+            if let Ok(catalog) = ThemeCatalog::load() {
+                let revision = catalog.revision();
+                if last_revision != Some(revision) {
+                    let event = Event::default()
+                        .event("theme-change")
+                        .data(revision.to_string());
+                    return Some((Ok(event), Some(revision)));
+                }
+            }
+            tokio::time::sleep(Duration::from_millis(500)).await;
+        }
+    });
+    Sse::new(events).keep_alive(KeepAlive::default())
+}
+
 async fn list_packs() -> Response {
     let catalog = match ThemeCatalog::load() {
         Ok(catalog) => catalog,
@@ -143,15 +164,24 @@ async fn curated_library() -> Response {
             .entry(entry.document.metadata.family.clone())
             .or_default() += 1;
     }
-    Json(json!({"packs": families.into_iter().map(|(id, theme_count)| json!({
-        "id": id,
-        "name": format!("{} collection", id.split('-').map(|word| {
+    Json(json!({"packs": families.into_iter().map(|(id, theme_count)| {
+        let name = format!("{} collection", id.split('-').map(|word| {
             let mut chars = word.chars();
             chars.next().map(|first| first.to_uppercase().collect::<String>() + chars.as_str()).unwrap_or_default()
-        }).collect::<Vec<_>>().join(" ")),
-        "description": format!("Curated Cybercore themes from the {id} collection."),
-        "theme_count": theme_count,
-    })).collect::<Vec<_>>() })).into_response()
+        }).collect::<Vec<_>>().join(" "));
+        let themes: Vec<_> = catalog.iter()
+            .filter(|(_, entry)| entry.builtin && entry.document.metadata.family == id)
+            .map(|(_, entry)| entry.document.clone())
+            .collect();
+        let pack = namespaced_curated_pack(&id, themes);
+        json!({
+            "id": id,
+            "name": name,
+            "description": format!("Curated Cybercore themes from the {id} collection."),
+            "theme_count": theme_count,
+            "metadata": pack.metadata,
+        })
+    }).collect::<Vec<_>>() })).into_response()
 }
 
 async fn install_curated_pack(Path(id): Path<String>) -> Response {
@@ -195,6 +225,26 @@ fn namespaced_curated_pack(id: &str, mut themes: Vec<ThemeDocument>) -> ThemePac
             name: format!("Curated {} Collection", id),
             description: format!("A user-installable copy of the reviewed {id} theme family."),
             author: "Cybercore".into(),
+            version: "1.0.0".into(),
+            license: "MIT".into(),
+            homepage: "https://github.com/cybercore-tech/cybercore".into(),
+            compatibility: "0.8+".into(),
+            preview: themes
+                .first()
+                .map(|theme| {
+                    let palette = &theme.palette;
+                    [
+                        &palette.bg,
+                        &palette.acid_green,
+                        &palette.hot_pink,
+                        &palette.cyan,
+                        &palette.purple,
+                    ]
+                    .into_iter()
+                    .map(|color| format!("#{}", color.trim_start_matches('#')))
+                    .collect()
+                })
+                .unwrap_or_default(),
         },
         themes,
     }
@@ -227,6 +277,7 @@ async fn validate_pack(Json(pack): Json<ThemePackDocument>) -> Response {
     Json(json!({
         "valid": true,
         "theme_count": pack.themes.len(),
+        "metadata": pack.metadata,
         "conflicts": catalog.pack_conflicts(&pack),
     }))
     .into_response()
@@ -292,6 +343,7 @@ async fn validate_theme(Json(document): Json<ThemeDocument>) -> Response {
         "valid": true,
         "contrast": document.contrast_report(Appearance::Dark),
         "light_contrast": light,
+        "quality": document.quality_report(),
     }))
     .into_response()
 }
@@ -414,6 +466,9 @@ mod tests {
         let pack = namespaced_curated_pack("cyberpunk", themes);
         pack.validate().unwrap();
         assert_eq!(pack.metadata.id, "curated-cyberpunk");
+        assert_eq!(pack.metadata.license, "MIT");
+        assert_eq!(pack.metadata.compatibility, "0.8+");
+        assert_eq!(pack.metadata.preview.len(), 5);
         assert!(!pack.themes.is_empty());
         assert!(pack.themes.iter().all(|theme| {
             theme.metadata.id.starts_with("curated-cyberpunk-")

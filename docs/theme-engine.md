@@ -75,9 +75,22 @@ catalog.set_appearance(Appearance::Light)?;
 ```
 
 `ThemeDocument::to_css` emits the established CYBERGRID variables and shared
-design variables. `contrast_report` reports WCAG contrast ratios for common
-text and accent/surface pairs; it is feedback for authors, not a guarantee
-that every component or state meets accessibility requirements.
+design variables. `contrast_report` reports WCAG contrast ratios for body
+text, accents, borders, and focus indicators. `quality_report` runs those
+checks for dark and light modes and records whether light mode has its own
+palette or uses the compatibility fallback. Studio shows warnings while
+editing; release automation can require a strict pass:
+
+```sh
+cybercore-theme check my-theme.json --strict
+cybercore-theme validate-pack my-pack.cyberpack.json
+```
+
+Strict mode fails when any checked contrast threshold is missed or the theme
+has no explicit light variant. The report covers shared semantic roles; apps
+remain responsible for checking their own component states.
+Install the checker with `cargo install cybercore --bin cybercore-theme`, or
+run it from a Cybercore checkout with `cargo run --bin cybercore-theme -- ...`.
 
 ## Shared storage and precedence
 
@@ -99,7 +112,8 @@ Custom themes may use the `family` field for organization in creator UIs.
 
 ## Hub integration
 
-Cyberdeck Hub exposes `GET /api/cybergrid/themes`, `POST /api/cybergrid/active/:id`,
+Cyberdeck Hub exposes `GET /api/cybergrid/themes`, `GET /api/cybergrid/events`,
+`POST /api/cybergrid/active/:id`,
 `POST /api/cybergrid/appearance/:mode`, and
 `GET /api/cybergrid/css/:name?appearance=dark|light`. The Hub links to the
 standalone `cybercore-theme-studio` app for authoring. Studio owns the save,
@@ -120,6 +134,7 @@ request `Host` header. A friendly URL such as
 machine's hosts file; the listener remains restricted to loopback.
 
 It exposes its creator API on that local server: `GET /api/themes`,
+`GET /api/events`,
 `POST /api/themes`, `DELETE /api/themes/:id`, `POST /api/themes/validate`,
 `POST /api/active/:id`, `POST /api/appearance/:mode`, and
 `GET /api/css/:id?appearance=dark|light`. Saved themes are immediately
@@ -141,7 +156,10 @@ colors can be set with a color picker or a direct six-digit hex value.
 ### Portable theme packs
 
 A pack is a JSON document containing pack metadata and one to 256 complete
-theme documents. Studio exports a selected family as
+theme documents. Metadata includes a pack version, author, license, homepage,
+minimum Cybercore compatibility (for example `0.8+`), and up to five validated
+preview colors. Existing format-1 packs remain readable with safe metadata
+defaults. Studio exports a selected family as
 `<pack-id>.cyberpack.json`; **Install theme pack** validates the pack before
 showing its theme count and ID conflicts. Choose a policy to reject all
 conflicts (the default), skip existing IDs, or replace matching custom themes.
@@ -149,13 +167,17 @@ Built-in themes are protected even
 under the replace policy. Reject policy checks every ID before writing, so a
 conflicting pack cannot partially install.
 
-The Studio pack API is `GET /api/packs` (family counts),
+The Studio pack API is `GET /api/packs` (family counts and metadata),
 `GET /api/packs/export?family=<family>`, `POST /api/packs/validate`, and
 `POST /api/packs`. Import requests contain `{ "pack": <pack-document>,
 "policy": "reject|skip|replace_custom" }`; the policy is optional and
 defaults to `reject`. The engine exposes `ThemePackDocument` and
 `ThemeCatalog::export_family`, `pack_conflicts`, and `import_pack` for other
 Cybercore consumers.
+
+The curated library displays license, version, compatibility, and palette
+swatches before installation. Imported packs receive the same metadata and
+preview validation before conflict handling or writes.
 
 ## Current integration scope
 
@@ -170,12 +192,18 @@ The crate owns the document format, validation, catalog, selection, contrast
 report, and CSS generation. Cybercore Theme Studio provides the universal
 visual creator. Cyberdeck Hub and Cyberdesk consume the shared catalog and
 custom themes. DaemonHall and Dockspace use the same catalog and CSS adapter.
-These web clients poll their local catalog endpoint every two seconds while
-visible, so selecting or editing a theme in Theme Studio or another app
-updates the open page without restarting services. A newly installed theme
-refreshes the picker on the next poll. Native apps such as Cyberterm need a
-runtime-specific refresh adapter; the shared catalog itself is immediately
-available to them through `ThemeCatalog::load`.
+Web clients subscribe to a local server-sent event endpoint. Each adapter
+checks the shared catalog revision and emits an event when a theme, selection,
+appearance, addition, or removal changes; clients then refresh the catalog
+immediately without restarting services. Cyberterm compares the same revision
+while running and reapplies the selected palette only when the shared catalog
+changes. `ThemeCatalog::revision` is opaque and intended for change detection,
+not persistence or comparisons across processes.
+
+The consumer compatibility workflow tests Hub, Cyberdesk, DaemonHall,
+Dockspace, and Cyberterm against their locked released dependency every week
+and on manual dispatch. Run it before publishing a Cybercore release and after
+updating consumer dependency pins.
 
 Consumers should pin a released `cybercore` version for reproducible builds.
 During development, pinning a reviewed Git revision is supported; updating a

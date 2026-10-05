@@ -105,9 +105,11 @@ theme and dark/light appearance are recorded in `active-theme.json`.
 The Hub exposes the shared catalog through its theme picker. The standalone
 creator is the `cybercore-theme-studio` workspace package; run it with
 `cargo run -p cybercore-theme-studio` for JSON import/export, contrast
-feedback, and shared persistence. See
+feedback, and shared persistence. The `cybercore-theme` CLI checks contrast,
+appearance variants, and portable packs. See
 [`docs/theme-engine.md`](docs/theme-engine.md) for the document contract,
-storage rules, API, and integration notes.
+storage rules, API, and integration notes. Install the checker with
+`cargo install cybercore --bin cybercore-theme`.
 Studio provides live previews, per-appearance contrast feedback, stable-ID
 editing for custom themes, and **Duplicate as new** to safely derive themes
 from built-ins or existing custom themes. Imports remain drafts until saved;
@@ -115,7 +117,10 @@ built-in themes cannot be overwritten. The Studio uses the active CYBERGRID
 palette for its own interface, groups themes into editable family packs, and
 accepts both color-picker and direct hex input for each semantic color.
 Theme families can be exported as portable `.cyberpack.json` bundles and
-installed together with validation and explicit collision policies.
+installed together with validation and explicit collision policies. Packs
+carry version/license/compatibility metadata and palette previews. Consumer
+compatibility automation covers Hub, Cyberdesk, DaemonHall, Dockspace, and
+Cyberterm.
 
 ## For Rust projects
 
@@ -123,7 +128,7 @@ Add as a dependency:
 
 ```toml
 [dependencies]
-cybercore = "0.7"
+cybercore = "0.8"
 ```
 
 Requires Rust 1.85 or newer. For local development against an unpublished

@@ -1,0 +1,62 @@
+{
+  "format_version": 1,
+  "metadata": {
+    "id": "release-gate-pack",
+    "name": "Release Gate Pack",
+    "description": "Pack validation fixture used by Cybercore release CI.",
+    "author": "Cybercore",
+    "version": "1.0.0",
+    "license": "MIT",
+    "homepage": "https://github.com/cybercore-tech/cybercore",
+    "compatibility": "0.8+",
+    "preview": ["#000000", "#ffffff", "#ff00ff", "#ffffff", "#ff00ff"]
+  },
+  "themes": [
+    {
+      "format_version": 1,
+      "metadata": {
+        "id": "release-gate-theme",
+        "name": "Release Gate Theme",
+        "family": "quality-check",
+        "description": "High-contrast fixture used by Cybercore release CI.",
+        "author": "Cybercore"
+      },
+      "palette": {
+        "bg": "000000",
+        "white": "ffffff",
+        "acid_green": "ffffff",
+        "hot_pink": "ff00ff",
+        "purple": "ff00ff",
+        "cyan": "ffffff",
+        "orange": "ffffff",
+        "red": "ff0000",
+        "panel": "000000",
+        "line": "ffffff",
+        "muted": "ffffff"
+      },
+      "variants": {
+        "light": {
+          "bg": "ffffff",
+          "white": "000000",
+          "acid_green": "000000",
+          "hot_pink": "800040",
+          "purple": "400060",
+          "cyan": "005555",
+          "orange": "663300",
+          "red": "800000",
+          "panel": "ffffff",
+          "line": "000000",
+          "muted": "000000"
+        }
+      },
+      "design": {
+        "font_ui": "Inter",
+        "font_mono": "JetBrains Mono",
+        "font_display": "Oxanium",
+        "density": "comfortable",
+        "corners": "sharp",
+        "motion": "full"
+      }
+    }
+  ]
+}

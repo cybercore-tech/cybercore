@@ -22,11 +22,12 @@ Cyberdeck Hub has a **Theme Studio** link to the default URL.
 
 The editor supports built-in and custom themes, dark and optional light
 palettes, typography, density, corners, and motion tokens. It validates theme
-documents and displays contrast feedback, and can import legacy flat palette
+documents and displays text, accent, border, and focus contrast feedback, and can import legacy flat palette
 JSON or import/export versioned theme documents.
 
 The **Curated pack library** offers the checked-in Cybercore theme families
-as collections. **Add collection to my library** copies the selected family
+as collections. Each preview shows pack version, author, license, engine
+compatibility, and palette swatches before installation. **Add collection to my library** copies the selected family
 under `curated-<family>` with namespaced IDs; it leaves embedded themes and
 the active selection alone. Repeating the action safely skips themes already
 copied. The library endpoints are `GET /api/library` and

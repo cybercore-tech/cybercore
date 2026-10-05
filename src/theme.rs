@@ -49,6 +49,21 @@ pub struct ThemePackMetadata {
     pub description: String,
     #[serde(default)]
     pub author: String,
+    /// Pack release version, independent of the theme document format.
+    #[serde(default = "default_pack_release")]
+    pub version: String,
+    /// SPDX identifier or a human-readable license name.
+    #[serde(default)]
+    pub license: String,
+    /// Optional source or project URL.
+    #[serde(default)]
+    pub homepage: String,
+    /// Cybercore release this pack was checked against.
+    #[serde(default = "default_engine_compatibility")]
+    pub compatibility: String,
+    /// Small palette preview used by library and import screens.
+    #[serde(default)]
+    pub preview: Vec<String>,
 }
 
 /// What to do when an imported pack contains IDs already in the catalog.
@@ -90,12 +105,48 @@ impl ThemePackDocument {
         for (label, value) in [
             ("pack description", &self.metadata.description),
             ("pack author", &self.metadata.author),
+            ("pack version", &self.metadata.version),
+            ("pack license", &self.metadata.license),
+            ("pack homepage", &self.metadata.homepage),
+            ("Cybercore compatibility", &self.metadata.compatibility),
         ] {
             if value.len() > 256 || value.chars().any(char::is_control) {
                 return Err(ThemeError::InvalidDocument(format!(
                     "{label} must be at most 256 characters and contain no control characters"
                 )));
             }
+        }
+        if !self.metadata.homepage.is_empty()
+            && !(self.metadata.homepage.starts_with("https://")
+                || self.metadata.homepage.starts_with("http://"))
+        {
+            return Err(ThemeError::InvalidDocument(
+                "pack homepage must be an http or https URL".into(),
+            ));
+        }
+        if self.metadata.version.trim().is_empty() || self.metadata.compatibility.trim().is_empty()
+        {
+            return Err(ThemeError::InvalidDocument(
+                "pack version and Cybercore compatibility must not be empty".into(),
+            ));
+        }
+        if !engine_compatibility_supported(&self.metadata.compatibility) {
+            return Err(ThemeError::InvalidDocument(format!(
+                "theme pack requires Cybercore {}, current version is {}",
+                self.metadata.compatibility,
+                env!("CARGO_PKG_VERSION")
+            )));
+        }
+        if self.metadata.preview.len() > 5
+            || self
+                .metadata
+                .preview
+                .iter()
+                .any(|color| !valid_hex_color(color))
+        {
+            return Err(ThemeError::InvalidDocument(
+                "pack preview must contain at most five six-digit hex colors".into(),
+            ));
         }
         if self.themes.is_empty() || self.themes.len() > 256 {
             return Err(ThemeError::InvalidDocument(
@@ -299,7 +350,46 @@ impl ThemeDocument {
                     &palette.bg,
                     3.0,
                 ),
+                ContrastCheck::new(
+                    "focus indicator on background",
+                    &palette.cyan,
+                    &palette.bg,
+                    3.0,
+                ),
+                ContrastCheck::new("border on background", &palette.line, &palette.bg, 3.0),
+                ContrastCheck::new("border on panel", &palette.line, &palette.panel, 3.0),
+                ContrastCheck::new(
+                    "purple accent on background",
+                    &palette.purple,
+                    &palette.bg,
+                    3.0,
+                ),
+                ContrastCheck::new(
+                    "orange accent on background",
+                    &palette.orange,
+                    &palette.bg,
+                    3.0,
+                ),
+                ContrastCheck::new("red accent on background", &palette.red, &palette.bg, 3.0),
             ],
+        }
+    }
+
+    /// Run contrast checks for both modes and report whether the light palette
+    /// was explicitly designed instead of using the compatibility fallback.
+    pub fn quality_report(&self) -> ThemeQualityReport {
+        let checks = [Appearance::Dark, Appearance::Light]
+            .into_iter()
+            .flat_map(|appearance| {
+                self.contrast_report(appearance)
+                    .checks
+                    .into_iter()
+                    .map(move |check| AppearanceContrastCheck { appearance, check })
+            })
+            .collect();
+        ThemeQualityReport {
+            has_explicit_light_variant: self.variants.contains_key(&Appearance::Light),
+            checks,
         }
     }
 
@@ -366,6 +456,25 @@ impl ContrastCheck {
 #[derive(Debug, Clone, Serialize, PartialEq)]
 pub struct ContrastReport {
     pub checks: Vec<ContrastCheck>,
+}
+
+#[derive(Debug, Clone, Serialize, PartialEq)]
+pub struct AppearanceContrastCheck {
+    pub appearance: Appearance,
+    #[serde(flatten)]
+    pub check: ContrastCheck,
+}
+
+#[derive(Debug, Clone, Serialize, PartialEq)]
+pub struct ThemeQualityReport {
+    pub has_explicit_light_variant: bool,
+    pub checks: Vec<AppearanceContrastCheck>,
+}
+
+impl ThemeQualityReport {
+    pub fn failures(&self) -> impl Iterator<Item = &AppearanceContrastCheck> {
+        self.checks.iter().filter(|check| !check.check.passes)
+    }
 }
 
 impl ContrastReport {
@@ -497,6 +606,24 @@ impl ThemeCatalog {
         self.appearance
     }
 
+    /// Stable within a process and sensitive to theme documents, selection,
+    /// appearance, additions, and removals. Web adapters use this revision to
+    /// publish change events without exposing filesystem paths.
+    pub fn revision(&self) -> u64 {
+        use std::hash::{Hash, Hasher};
+        let mut hasher = std::collections::hash_map::DefaultHasher::new();
+        self.active.hash(&mut hasher);
+        self.appearance.as_str().hash(&mut hasher);
+        for (id, entry) in &self.entries {
+            id.hash(&mut hasher);
+            entry.builtin.hash(&mut hasher);
+            if let Ok(document) = serde_json::to_vec(&entry.document) {
+                document.hash(&mut hasher);
+            }
+        }
+        hasher.finish()
+    }
+
     /// Export every built-in and custom theme in a named family as one pack.
     pub fn export_family(&self, family: &str) -> Option<ThemePackDocument> {
         let themes: Vec<_> = self
@@ -520,6 +647,11 @@ impl ThemeCatalog {
                 name: pack_name.to_string(),
                 description: format!("Cybercore themes from the {pack_name} family."),
                 author: "Cybercore Theme Studio".into(),
+                version: "1.0.0".into(),
+                license: "MIT".into(),
+                homepage: "https://github.com/cybercore-tech/cybercore".into(),
+                compatibility: "0.8+".into(),
+                preview: pack_preview(&themes),
             },
             themes,
         };
@@ -704,6 +836,64 @@ fn validate_palette(palette: &Palette, mode: &str) -> Result<(), ThemeError> {
         }
     }
     Ok(())
+}
+
+fn valid_hex_color(value: &str) -> bool {
+    let value = value.strip_prefix('#').unwrap_or(value);
+    value.len() == 6 && value.bytes().all(|byte| byte.is_ascii_hexdigit())
+}
+
+fn pack_preview(themes: &[ThemeDocument]) -> Vec<String> {
+    themes
+        .first()
+        .map(|theme| {
+            let palette = &theme.palette;
+            [
+                &palette.bg,
+                &palette.acid_green,
+                &palette.hot_pink,
+                &palette.cyan,
+                &palette.purple,
+            ]
+            .into_iter()
+            .map(|color| format!("#{}", color.trim_start_matches('#')))
+            .collect()
+        })
+        .unwrap_or_default()
+}
+
+fn default_pack_release() -> String {
+    "1.0.0".into()
+}
+
+fn default_engine_compatibility() -> String {
+    "0.7".into()
+}
+
+fn engine_compatibility_supported(requirement: &str) -> bool {
+    let minimum = requirement.strip_prefix(">=").unwrap_or(requirement);
+    let minimum = minimum.strip_suffix('+').unwrap_or(minimum);
+    let mut required = minimum.split('.');
+    let (Some(required_major), Some(required_minor), None) =
+        (required.next(), required.next(), required.next())
+    else {
+        return false;
+    };
+    let (Ok(required_major), Ok(required_minor)) =
+        (required_major.parse::<u64>(), required_minor.parse::<u64>())
+    else {
+        return false;
+    };
+    let mut current = env!("CARGO_PKG_VERSION").split('.');
+    let (Some(current_major), Some(current_minor)) = (current.next(), current.next()) else {
+        return false;
+    };
+    let (Ok(current_major), Ok(current_minor)) =
+        (current_major.parse::<u64>(), current_minor.parse::<u64>())
+    else {
+        return false;
+    };
+    (required_major, required_minor) <= (current_major, current_minor)
 }
 
 fn user_config_dir() -> Result<PathBuf, ThemeError> {
@@ -894,6 +1084,11 @@ mod pack_tests {
                 name: "Test Pack".into(),
                 description: String::new(),
                 author: String::new(),
+                version: "1.0.0".into(),
+                license: "MIT".into(),
+                homepage: String::new(),
+                compatibility: "0.8".into(),
+                preview: Vec::new(),
             },
             themes,
         }
@@ -922,6 +1117,49 @@ mod pack_tests {
             active: "core-default".into(),
             appearance: Appearance::Dark,
         }
+    }
+
+    #[test]
+    fn old_pack_metadata_loads_with_safe_compatibility_defaults() {
+        let encoded = serde_json::to_value(pack(vec![theme("one", "test")])).unwrap();
+        let mut value = encoded;
+        let metadata = value["metadata"].as_object_mut().unwrap();
+        metadata.remove("version");
+        metadata.remove("license");
+        metadata.remove("homepage");
+        metadata.remove("compatibility");
+        metadata.remove("preview");
+        let decoded: ThemePackDocument = serde_json::from_value(value).unwrap();
+        assert_eq!(decoded.metadata.version, "1.0.0");
+        assert_eq!(decoded.metadata.compatibility, "0.7");
+        assert!(decoded.metadata.preview.is_empty());
+        decoded.validate().unwrap();
+    }
+
+    #[test]
+    fn pack_preview_and_homepage_are_validated_before_install() {
+        let mut invalid_homepage = pack(vec![theme("one", "test")]);
+        invalid_homepage.metadata.homepage = "javascript:alert(1)".into();
+        assert!(invalid_homepage.validate().is_err());
+
+        let mut invalid_preview = pack(vec![theme("one", "test")]);
+        invalid_preview.metadata.preview = vec!["##ffffff".into()];
+        assert!(invalid_preview.validate().is_err());
+
+        let mut future_pack = pack(vec![theme("one", "test")]);
+        future_pack.metadata.compatibility = "9.0+".into();
+        assert!(future_pack.validate().is_err());
+    }
+
+    #[test]
+    fn revision_changes_when_active_theme_or_appearance_changes() {
+        let mut catalog = catalog();
+        let initial = catalog.revision();
+        catalog.active = "user-custom".into();
+        assert_ne!(catalog.revision(), initial);
+        catalog.active = "core-default".into();
+        catalog.appearance = Appearance::Light;
+        assert_ne!(catalog.revision(), initial);
     }
 
     #[test]

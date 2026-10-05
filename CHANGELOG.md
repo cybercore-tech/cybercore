@@ -2,7 +2,24 @@
 
 All notable changes to `cybercore` are documented in this file.
 
-## [0.7.0] - Unreleased
+## [0.8.0] - 2026-10-05
+
+### Added
+
+- `cybercore-theme check` reports text, accent, border, and focus contrast for
+  dark and light appearance; `--strict` requires every check to pass and an
+  explicit light palette. `validate-pack` checks portable bundles before use.
+- Theme-pack metadata now supports pack release, license, homepage, Cybercore
+  compatibility, and validated color previews while old format-1 packs remain
+  readable.
+- Consumer compatibility workflow tests Cyberdeck Hub, Cyberdesk, DaemonHall,
+  Dockspace, and Cyberterm on a weekly schedule or by manual dispatch.
+- Shared component styles now include action buttons, navigation, cards,
+  alerts, form fields, visible keyboard focus, and reduced-motion behavior.
+- Web consumers receive shared-catalog change events; Cyberterm refreshes only
+  when the catalog revision changes.
+
+## [0.7.0] - 2026-10-04
 
 ### Added
 
@@ -13,19 +30,14 @@ All notable changes to `cybercore` are documented in this file.
 - `cybercore-theme-studio` workspace binary: standalone local visual editor
   with library selection, CRUD, dark/light editing, import/export, preview,
   and contrast feedback.
-- `docs/theme-engine.md` with the theme JSON contract, Rust API, storage
-  precedence, pack format, and cross-app integration scope.
 - Theme Studio's curated pack library can copy reviewed built-in families into
   the user's catalog with isolated IDs, leaving built-ins and active selection
   untouched.
-- Cyberdeck Hub, DaemonHall, Cyberdesk, Dockspace, and Cyberterm refresh
-  shared theme changes while running; web pages update when visible and
-  Cyberterm refreshes its catalog every two seconds.
+- Web consumers sync shared theme changes while running; Cyberterm refreshes
+  its catalog while running.
 - Release-gate tests validate every embedded theme and assert the shared
-  component CSS contract.
-- CI verifies the declared Rust 1.85 minimum alongside stable.
-- `docs/design-system.md` documents component loading order and the reusable
-  CSS class contract.
+  component CSS contract. CI checks the declared Rust 1.85 minimum alongside
+  stable.
 
 ## [0.6.0] - 2026-10-04
 
