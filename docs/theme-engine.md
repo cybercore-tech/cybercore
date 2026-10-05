@@ -152,10 +152,12 @@ corner shape, and motion. A custom light palette can be edited separately.
 catalog ID even if its display name changes. Built-in themes remain immutable.
 Use **Duplicate** to start a custom theme from any built-in or custom theme
 without overwriting the source. **New theme** starts a draft from the active
-palette. Import loads a draft and does not write it until Save; export downloads
-the current draft as JSON. The theme library groups entries by family, and the
-family field can select an existing pack or define a new one. Pack import and
-export and curated collections are available in the library panel.
+palette. **Make this a custom theme** clones the live preview, including current
+palette and design edits, into a new unsaved draft. Import loads a draft and
+does not write it until Save; export downloads the current draft as JSON. The
+theme library groups entries by family, and the family field can select an
+existing pack or define a new one. Pack import and export and curated
+collections are available in the library panel.
 
 ### Portable theme packs
 
