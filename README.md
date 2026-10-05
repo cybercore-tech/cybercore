@@ -100,6 +100,10 @@ creator is the `cybercore-theme-studio` workspace package; run it with
 feedback, and shared persistence. See
 [`docs/theme-engine.md`](docs/theme-engine.md) for the document contract,
 storage rules, API, and integration notes.
+Studio provides live previews, per-appearance contrast feedback, stable-ID
+editing for custom themes, and **Duplicate as new** to safely derive themes
+from built-ins or existing custom themes. Imports remain drafts until saved;
+built-in themes cannot be overwritten.
 
 ## For Rust projects
 

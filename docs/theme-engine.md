@@ -125,6 +125,15 @@ It exposes its creator API on that local server: `GET /api/themes`,
 `GET /api/css/:id?appearance=dark|light`. Saved themes are immediately
 available to every app using this catalog and config directory.
 
+In the editor, **Edit** loads a theme for changes; saving a custom theme
+updates its stable catalog ID even if its display name changes. Built-in
+themes remain immutable. Use **Duplicate as new** to start a custom theme
+from any built-in or custom theme without overwriting the source. **New**
+starts a draft using the currently active palette. Import loads a draft and
+does not write it until Save; export downloads the current draft as JSON.
+The live sample preview and contrast report update as you edit either
+appearance variant.
+
 ## Current integration scope
 
 The crate owns the document format, validation, catalog, selection, contrast

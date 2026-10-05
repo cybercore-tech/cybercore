@@ -79,7 +79,7 @@
         <div id="contrast" role="status" aria-live="polite"></div>
         <p id="status" class="status" role="status" aria-live="polite"></p>
         <div class="actions">
-          <button id="new-theme" type="button">New</button><button id="save-theme" type="button">Save &amp; apply</button><button id="delete-theme" type="button">Delete custom</button>
+          <button id="new-theme" type="button">New</button><button id="duplicate-theme" type="button">Duplicate as new</button><button id="save-theme" type="button">Save &amp; apply</button><button id="delete-theme" type="button">Delete custom</button>
         </div>
         <div class="actions">
           <button id="import-theme" type="button">Import JSON</button><button id="export-theme" type="button">Export JSON</button><input id="file" type="file" accept=".json,application/json" hidden>
@@ -100,20 +100,21 @@
 const keys = ['bg','white','acid_green','hot_pink','purple','cyan','orange','red','panel','line','muted'];
 const roles = {bg:'--bg',white:'--fg',acid_green:'--acid',hot_pink:'--pink',purple:'--purple',cyan:'--cyan',orange:'--orange',red:'--red',panel:'--panel',line:'--line',muted:'--muted'};
 const el = id => document.getElementById(id);
-let themes = [], activeId = '', sharedAppearance = 'dark', editMode = 'dark', variants = {}, debounce;
+let themes = [], activeId = '', editingId = null, sharedAppearance = 'dark', editMode = 'dark', variants = {}, debounce, validationRun = 0;
 
 function paletteNow() { return Object.fromEntries(keys.map(key => [key, el('color-' + key).value.slice(1)])); }
 function fillPalette(palette) { keys.forEach(key => { el('color-' + key).value = '#' + ((palette && palette[key]) || '888888').replace('#',''); }); preview(); }
 function currentDocument() {
   variants[editMode] = paletteNow();
   const name = el('name').value.trim() || 'Untitled theme';
-  const id = name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,64) || 'custom-theme';
+  const id = editingId || name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,64) || 'custom-theme';
   const palette = variants.dark || paletteNow();
   const savedVariants = variants.light ? {light:variants.light} : {};
   return {format_version:1, metadata:{id,name,family:el('family').value.trim() || 'custom',description:el('description').value,author:el('author').value}, palette, variants:savedVariants,
     design:{font_ui:el('font-ui').value,font_mono:el('font-mono').value,font_display:el('font-display').value,density:el('density').value,corners:el('corners').value,motion:el('motion').value}};
 }
 function preview() {
+  const validation = ++validationRun;
   const p = paletteNow(), css = [];
   for (const key of keys) css.push(roles[key]+':#'+p[key].replace('#',''));
   const safeFont = value => /^[A-Za-z0-9 _-]{1,64}$/.test(value) ? value : 'Inter';
@@ -123,7 +124,7 @@ function preview() {
   css.push('--dur-mid:'+({full:'.24s',reduced:'.08s',none:'0s'}[el('motion').value] || '.24s'));
   el('draft-css').textContent=':root{'+css.join(';')+'}';
   el('palette-strip').replaceChildren(...keys.slice(2,8).map(key => {const swatch=document.createElement('i');swatch.style.backgroundColor='#'+p[key].replace('#','');swatch.title=key;return swatch;}));
-  clearTimeout(debounce); debounce=setTimeout(validateDraft,180);
+  clearTimeout(debounce); debounce=setTimeout(()=>validateDraft(validation),180);
 }
 async function request(url, options) {
   const response = await fetch(url, options);
@@ -132,13 +133,15 @@ async function request(url, options) {
   return data;
 }
 function message(text, kind='') { el('status').textContent=text; el('status').className='status '+kind; }
-async function validateDraft() {
+async function validateDraft(run) {
+  if (run !== validationRun) return;
   try {
     const report = await request('/api/themes/validate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(currentDocument())});
+    if (run !== validationRun) return;
     const result = editMode === 'light' ? (report.light_contrast || report.contrast) : report.contrast;
     const failed = (result?.checks || []).filter(check=>!check.passes);
     el('contrast').textContent = failed.length ? 'Contrast needs attention: '+failed.map(check=>check.label+' '+check.ratio.toFixed(2)+':1').join(', ') : 'Common text and accent contrast checks pass.';
-  } catch (error) { el('contrast').textContent=error.message; }
+  } catch (error) { if (run === validationRun) el('contrast').textContent=error.message; }
 }
 async function refreshLibrary(preferred=activeId) {
   const data=await request('/api/themes'); themes=data.themes; activeId=data.active; sharedAppearance=data.appearance;
@@ -152,7 +155,8 @@ async function applyTheme(id) {
   if(!response.ok) throw new Error('Theme stylesheet unavailable');
   el('theme-css').textContent=await response.text(); el('draft-css').textContent=''; activeId=id;
 }
-function editDocument(document) {
+function editDocument(document, id=null) {
+  editingId = id;
   variants=JSON.parse(JSON.stringify(document.variants || {})); variants.dark=document.palette; editMode='dark'; el('variant').value='dark';
   el('name').value=document.metadata.name || ''; el('family').value=document.metadata.family || 'custom'; el('description').value=document.metadata.description || ''; el('author').value=document.metadata.author || '';
   el('font-ui').value=document.design?.font_ui || 'Inter'; el('font-mono').value=document.design?.font_mono || 'JetBrains Mono'; el('font-display').value=document.design?.font_display || 'Oxanium';
@@ -160,12 +164,27 @@ function editDocument(document) {
   fillPalette(document.palette || document);
 }
 function newTheme() {
+  editingId = null;
   variants={}; editMode='dark'; el('variant').value='dark'; el('name').value=''; el('family').value='custom'; el('description').value=''; el('author').value='';
   el('font-ui').value='Inter'; el('font-mono').value='JetBrains Mono'; el('font-display').value='Oxanium'; el('density').value='comfortable'; el('corners').value='sharp'; el('motion').value='full';
   const active=themes.find(theme=>theme.id===activeId); fillPalette(active?.document.palette); message('New theme draft.');
 }
+function duplicateTheme() {
+  const source=themes.find(theme=>theme.id===el('theme-picker').value);
+  if (!source) { message('Choose a theme to duplicate first.','error'); return; }
+  editDocument(source.document);
+  const base=(source.document.metadata.name || source.id)+' Copy';
+  let name=base, suffix=2;
+  const ids=new Set(themes.map(theme=>theme.id));
+  const slug=value=>value.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,64) || 'custom-theme';
+  while(ids.has(slug(name))) name=base+' '+suffix++;
+  el('name').value=name;
+  editingId=null;
+  preview();
+  message('Editing a new copy of '+source.document.metadata.name+'. Save when ready.','ok');
+}
 async function saveTheme() {
-  try { const result=await request('/api/themes',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(currentDocument())}); await refreshLibrary(result.id); message('Saved and applied '+result.name+'.','ok'); }
+  try { const result=await request('/api/themes',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(currentDocument())}); editingId=result.id; await refreshLibrary(result.id); message('Saved and applied '+result.name+'.','ok'); }
   catch(error) { message(error.message,'error'); }
 }
 async function deleteTheme() {
@@ -203,8 +222,8 @@ document.querySelectorAll('#density,#corners,#motion').forEach(input=>input.addE
 el('appearance').addEventListener('click',changeAppearance);
 el('variant').addEventListener('change',changeVariant);
 el('theme-picker').addEventListener('change',async event=>{try{await request('/api/active/'+encodeURIComponent(event.target.value),{method:'POST'});await applyTheme(event.target.value);}catch(error){message(error.message,'error');}});
-el('load-theme').addEventListener('click',()=>{const selected=themes.find(theme=>theme.id===el('theme-picker').value);if(selected)editDocument(selected.document);});
-el('new-theme').addEventListener('click',newTheme);el('save-theme').addEventListener('click',saveTheme);el('delete-theme').addEventListener('click',deleteTheme);
+el('load-theme').addEventListener('click',()=>{const selected=themes.find(theme=>theme.id===el('theme-picker').value);if(selected){editDocument(selected.document,selected.builtin?null:selected.id);message('Editing '+selected.document.metadata.name+'.','ok');}});
+el('new-theme').addEventListener('click',newTheme);el('duplicate-theme').addEventListener('click',duplicateTheme);el('save-theme').addEventListener('click',saveTheme);el('delete-theme').addEventListener('click',deleteTheme);
 el('import-theme').addEventListener('click',()=>el('file').click());el('file').addEventListener('change',event=>importTheme(event.target.files[0]));el('export-theme').addEventListener('click',exportTheme);
 refreshLibrary().then(()=>newTheme()).catch(error=>message(error.message,'error'));
 </script>
