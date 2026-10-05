@@ -106,6 +106,8 @@ from built-ins or existing custom themes. Imports remain drafts until saved;
 built-in themes cannot be overwritten. The Studio uses the active CYBERGRID
 palette for its own interface, groups themes into editable family packs, and
 accepts both color-picker and direct hex input for each semantic color.
+Theme families can be exported as portable `.cyberpack.json` bundles and
+installed together with validation and explicit collision policies.
 
 ## For Rust projects
 

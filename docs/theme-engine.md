@@ -138,6 +138,25 @@ The theme library groups entries by family; the **Theme pack** field can
 select an existing family or define a new one. Each of the eleven semantic
 colors can be set with a color picker or a direct six-digit hex value.
 
+### Portable theme packs
+
+A pack is a JSON document containing pack metadata and one to 256 complete
+theme documents. Studio exports a selected family as
+`<pack-id>.cyberpack.json`; **Install theme pack** validates the pack before
+showing its theme count and ID conflicts. Choose a policy to reject all
+conflicts (the default), skip existing IDs, or replace matching custom themes.
+Built-in themes are protected even
+under the replace policy. Reject policy checks every ID before writing, so a
+conflicting pack cannot partially install.
+
+The Studio pack API is `GET /api/packs` (family counts),
+`GET /api/packs/export?family=<family>`, `POST /api/packs/validate`, and
+`POST /api/packs`. Import requests contain `{ "pack": <pack-document>,
+"policy": "reject|skip|replace_custom" }`; the policy is optional and
+defaults to `reject`. The engine exposes `ThemePackDocument` and
+`ThemeCatalog::export_family`, `pack_conflicts`, and `import_pack` for other
+Cybercore consumers.
+
 ## Current integration scope
 
 The crate owns the document format, validation, catalog, selection, contrast

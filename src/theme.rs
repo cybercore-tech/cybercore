@@ -7,7 +7,7 @@
 
 use crate::schema::{self, Palette};
 use serde::{Deserialize, Serialize};
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::fmt;
 use std::fs::{self, OpenOptions};
 use std::io::Write;
@@ -15,6 +15,7 @@ use std::path::{Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 pub const FORMAT_VERSION: u32 = 1;
+pub const THEME_PACK_FORMAT_VERSION: u32 = 1;
 const BUILTIN_FAMILY: &str = "default";
 
 /// A saved theme, portable as JSON and independent of a specific app.
@@ -29,6 +30,87 @@ pub struct ThemeDocument {
     pub variants: BTreeMap<Appearance, Palette>,
     #[serde(default)]
     pub design: DesignTokens,
+}
+
+/// A portable bundle of themes that can be shared and installed together.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct ThemePackDocument {
+    pub format_version: u32,
+    pub metadata: ThemePackMetadata,
+    pub themes: Vec<ThemeDocument>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct ThemePackMetadata {
+    /// Stable package identifier used in filenames and import reports.
+    pub id: String,
+    pub name: String,
+    #[serde(default)]
+    pub description: String,
+    #[serde(default)]
+    pub author: String,
+}
+
+/// What to do when an imported pack contains IDs already in the catalog.
+#[derive(Debug, Clone, Copy, Default, Deserialize, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum PackConflictPolicy {
+    /// Reject the pack without writing any themes.
+    #[default]
+    Reject,
+    /// Keep existing themes and import only new IDs.
+    Skip,
+    /// Replace colliding custom themes; built-ins are always protected.
+    ReplaceCustom,
+}
+
+#[derive(Debug, Clone, Serialize, PartialEq, Eq)]
+pub struct PackConflicts {
+    pub custom: Vec<String>,
+    pub builtin: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize, PartialEq, Eq)]
+pub struct PackImportReport {
+    pub imported: Vec<String>,
+    pub skipped: Vec<String>,
+}
+
+impl ThemePackDocument {
+    pub fn validate(&self) -> Result<(), ThemeError> {
+        if self.format_version != THEME_PACK_FORMAT_VERSION {
+            return Err(ThemeError::UnsupportedPackVersion(self.format_version));
+        }
+        validate_id(&self.metadata.id)?;
+        if self.metadata.name.trim().is_empty() || self.metadata.name.len() > 96 {
+            return Err(ThemeError::InvalidDocument(
+                "pack name must contain 1 to 96 characters".into(),
+            ));
+        }
+        for (label, value) in [
+            ("pack description", &self.metadata.description),
+            ("pack author", &self.metadata.author),
+        ] {
+            if value.len() > 256 || value.chars().any(char::is_control) {
+                return Err(ThemeError::InvalidDocument(format!(
+                    "{label} must be at most 256 characters and contain no control characters"
+                )));
+            }
+        }
+        if self.themes.is_empty() || self.themes.len() > 256 {
+            return Err(ThemeError::InvalidDocument(
+                "a theme pack must contain 1 to 256 themes".into(),
+            ));
+        }
+        let mut ids = BTreeSet::new();
+        for theme in &self.themes {
+            theme.validate()?;
+            if !ids.insert(&theme.metadata.id) {
+                return Err(ThemeError::DuplicateId(theme.metadata.id.clone()));
+            }
+        }
+        Ok(())
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -415,6 +497,94 @@ impl ThemeCatalog {
         self.appearance
     }
 
+    /// Export every built-in and custom theme in a named family as one pack.
+    pub fn export_family(&self, family: &str) -> Option<ThemePackDocument> {
+        let themes: Vec<_> = self
+            .entries
+            .values()
+            .filter(|entry| entry.document.metadata.family.eq_ignore_ascii_case(family))
+            .map(|entry| entry.document.clone())
+            .collect();
+        if themes.is_empty() {
+            return None;
+        }
+        let pack_name = if family.trim().is_empty() {
+            "Uncategorized"
+        } else {
+            family
+        };
+        let pack = ThemePackDocument {
+            format_version: THEME_PACK_FORMAT_VERSION,
+            metadata: ThemePackMetadata {
+                id: pack_id(family),
+                name: pack_name.to_string(),
+                description: format!("Cybercore themes from the {pack_name} family."),
+                author: "Cybercore Theme Studio".into(),
+            },
+            themes,
+        };
+        Some(pack)
+    }
+
+    /// Report custom and built-in ID collisions without changing the catalog.
+    pub fn pack_conflicts(&self, pack: &ThemePackDocument) -> PackConflicts {
+        let mut conflicts = PackConflicts {
+            custom: Vec::new(),
+            builtin: Vec::new(),
+        };
+        for theme in &pack.themes {
+            if let Some(existing) = self.entries.get(&theme.metadata.id) {
+                if existing.builtin {
+                    conflicts.builtin.push(theme.metadata.id.clone());
+                } else {
+                    conflicts.custom.push(theme.metadata.id.clone());
+                }
+            }
+        }
+        conflicts
+    }
+
+    /// Import a validated pack after resolving all ID collisions up front.
+    /// Reject policy guarantees no writes occur if any ID conflicts.
+    pub fn import_pack(
+        &mut self,
+        pack: ThemePackDocument,
+        policy: PackConflictPolicy,
+    ) -> Result<PackImportReport, ThemeError> {
+        pack.validate()?;
+        let conflicts = self.pack_conflicts(&pack);
+        if policy == PackConflictPolicy::Reject
+            && (!conflicts.custom.is_empty() || !conflicts.builtin.is_empty())
+        {
+            return Err(ThemeError::PackConflicts {
+                custom: conflicts.custom,
+                builtin: conflicts.builtin,
+            });
+        }
+        if policy == PackConflictPolicy::ReplaceCustom && !conflicts.builtin.is_empty() {
+            return Err(ThemeError::PackConflicts {
+                custom: Vec::new(),
+                builtin: conflicts.builtin,
+            });
+        }
+
+        let mut report = PackImportReport {
+            imported: Vec::new(),
+            skipped: Vec::new(),
+        };
+        for theme in pack.themes {
+            let id = theme.metadata.id.clone();
+            let conflict = self.entries.contains_key(&id);
+            if conflict && policy == PackConflictPolicy::Skip {
+                report.skipped.push(id);
+                continue;
+            }
+            self.save(theme)?;
+            report.imported.push(id);
+        }
+        Ok(report)
+    }
+
     /// Save a portable custom theme to the shared user theme folder.
     pub fn save(&mut self, document: ThemeDocument) -> Result<(), ThemeError> {
         document.validate()?;
@@ -472,6 +642,25 @@ impl ThemeCatalog {
             self.active = fallback;
         }
         Ok(true)
+    }
+}
+
+fn pack_id(family: &str) -> String {
+    let mut id = String::new();
+    for character in family.to_ascii_lowercase().chars() {
+        if character.is_ascii_lowercase() || character.is_ascii_digit() {
+            if id.len() < 64 {
+                id.push(character);
+            }
+        } else if !id.is_empty() && !id.ends_with('-') && id.len() < 64 {
+            id.push('-');
+        }
+    }
+    let id = id.trim_matches('-');
+    if id.is_empty() {
+        "theme-pack".into()
+    } else {
+        id.into()
     }
 }
 
@@ -621,9 +810,14 @@ pub enum ThemeError {
         value: String,
     },
     UnsupportedVersion(u32),
+    UnsupportedPackVersion(u32),
     UnknownTheme(String),
     DuplicateId(String),
     ReservedId(String),
+    PackConflicts {
+        custom: Vec<String>,
+        builtin: Vec<String>,
+    },
     MissingConfigHome,
 }
 
@@ -639,9 +833,22 @@ impl fmt::Display for ThemeError {
             Self::UnsupportedVersion(version) => {
                 write!(f, "unsupported theme format version {version}")
             }
+            Self::UnsupportedPackVersion(version) => {
+                write!(f, "unsupported theme pack format version {version}")
+            }
             Self::UnknownTheme(id) => write!(f, "unknown theme '{id}'"),
             Self::DuplicateId(id) => write!(f, "theme id '{id}' is already in use"),
             Self::ReservedId(id) => write!(f, "cannot replace or remove built-in theme '{id}'"),
+            Self::PackConflicts { custom, builtin } => {
+                write!(f, "theme pack has conflicting IDs")?;
+                if !custom.is_empty() {
+                    write!(f, "; custom themes: {}", custom.join(", "))?;
+                }
+                if !builtin.is_empty() {
+                    write!(f, "; protected built-ins: {}", builtin.join(", "))?;
+                }
+                Ok(())
+            }
             Self::MissingConfigHome => {
                 write!(f, "set CYBERCORE_CONFIG_DIR, XDG_CONFIG_HOME, or HOME")
             }
@@ -650,3 +857,141 @@ impl fmt::Display for ThemeError {
 }
 
 impl std::error::Error for ThemeError {}
+
+#[cfg(test)]
+mod pack_tests {
+    use super::{
+        Appearance, PackConflictPolicy, ThemeCatalog, ThemeDocument, ThemeEntry, ThemePackDocument,
+        ThemePackMetadata, THEME_PACK_FORMAT_VERSION,
+    };
+    use crate::schema::Palette;
+    use std::collections::BTreeMap;
+
+    fn theme(id: &str, family: &str) -> ThemeDocument {
+        let palette = Palette {
+            bg: "101010".into(),
+            white: "eeeeee".into(),
+            acid_green: "aadd44".into(),
+            hot_pink: "dd4488".into(),
+            purple: "8844aa".into(),
+            cyan: "44aaaa".into(),
+            orange: "dd8844".into(),
+            red: "dd4444".into(),
+            panel: "202020".into(),
+            line: "444444".into(),
+            muted: "aaaaaa".into(),
+        };
+        let mut document = ThemeDocument::new(id, id, palette);
+        document.metadata.family = family.into();
+        document
+    }
+
+    fn pack(themes: Vec<ThemeDocument>) -> ThemePackDocument {
+        ThemePackDocument {
+            format_version: THEME_PACK_FORMAT_VERSION,
+            metadata: ThemePackMetadata {
+                id: "test-pack".into(),
+                name: "Test Pack".into(),
+                description: String::new(),
+                author: String::new(),
+            },
+            themes,
+        }
+    }
+
+    fn catalog() -> ThemeCatalog {
+        let builtin = theme("core-default", "core");
+        let custom = theme("user-custom", "night-ops");
+        ThemeCatalog {
+            entries: BTreeMap::from([
+                (
+                    builtin.metadata.id.clone(),
+                    ThemeEntry {
+                        document: builtin,
+                        builtin: true,
+                    },
+                ),
+                (
+                    custom.metadata.id.clone(),
+                    ThemeEntry {
+                        document: custom,
+                        builtin: false,
+                    },
+                ),
+            ]),
+            active: "core-default".into(),
+            appearance: Appearance::Dark,
+        }
+    }
+
+    #[test]
+    fn pack_validates_and_round_trips_json() {
+        let pack = pack(vec![
+            theme("night-one", "night-ops"),
+            theme("night-two", "night-ops"),
+        ]);
+        pack.validate().unwrap();
+        let encoded = serde_json::to_string(&pack).unwrap();
+        let decoded: ThemePackDocument = serde_json::from_str(&encoded).unwrap();
+        assert_eq!(decoded, pack);
+    }
+
+    #[test]
+    fn pack_rejects_duplicate_theme_ids() {
+        let pack = pack(vec![
+            theme("night-one", "night-ops"),
+            theme("night-one", "night-ops"),
+        ]);
+        assert!(pack.validate().is_err());
+    }
+
+    #[test]
+    fn pack_version_is_validated_independently() {
+        let mut pack = pack(vec![theme("night-one", "night-ops")]);
+        pack.format_version += 1;
+        assert!(matches!(
+            pack.validate(),
+            Err(super::ThemeError::UnsupportedPackVersion(_))
+        ));
+    }
+
+    #[test]
+    fn reject_policy_reports_conflicts_without_mutating_catalog() {
+        let mut catalog = catalog();
+        let pack = pack(vec![
+            theme("core-default", "replacement"),
+            theme("user-custom", "replacement"),
+            theme("new-theme", "replacement"),
+        ]);
+        let conflicts = catalog.pack_conflicts(&pack);
+        assert_eq!(conflicts.builtin, vec!["core-default"]);
+        assert_eq!(conflicts.custom, vec!["user-custom"]);
+        assert!(catalog
+            .import_pack(pack, PackConflictPolicy::Reject)
+            .is_err());
+        assert_eq!(catalog.entries.len(), 2);
+        assert!(!catalog.entries.contains_key("new-theme"));
+    }
+
+    #[test]
+    fn skip_policy_keeps_all_existing_entries_untouched() {
+        let mut catalog = catalog();
+        let pack = pack(vec![
+            theme("core-default", "replacement"),
+            theme("user-custom", "replacement"),
+        ]);
+        let report = catalog.import_pack(pack, PackConflictPolicy::Skip).unwrap();
+        assert!(report.imported.is_empty());
+        assert_eq!(report.skipped, vec!["core-default", "user-custom"]);
+        assert_eq!(catalog.entries.len(), 2);
+    }
+
+    #[test]
+    fn export_family_collects_themes_as_a_pack() {
+        let catalog = catalog();
+        let pack = catalog.export_family("night-ops").unwrap();
+        assert_eq!(pack.metadata.id, "night-ops");
+        assert_eq!(pack.themes.len(), 1);
+        assert_eq!(pack.themes[0].metadata.id, "user-custom");
+    }
+}

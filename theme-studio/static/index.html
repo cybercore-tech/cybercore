@@ -93,6 +93,8 @@
         <div class="actions">
           <button id="import-theme" type="button">Import JSON</button><button id="export-theme" type="button">Export JSON</button><input id="file" type="file" accept=".json,application/json" hidden>
         </div>
+        <div class="field"><label for="pack-policy">Theme pack conflicts</label><select id="pack-policy"><option value="reject">Reject if IDs exist</option><option value="skip">Skip existing themes</option><option value="replace_custom">Replace matching custom themes</option></select></div>
+        <div class="actions"><button id="import-pack" type="button">Install theme pack</button><button id="export-pack" type="button">Export family pack</button><input id="pack-file" type="file" accept=".json,.cyberpack.json,application/json" hidden></div>
       </section>
       <section class="panel preview" aria-labelledby="preview-title">
         <div class="preview-head"><div><div class="eyebrow">Live preview</div><h2 id="preview-title">Sample workspace</h2></div><span class="badge">SYSTEM ONLINE</span></div>
@@ -225,6 +227,33 @@ async function importTheme(file) {
   catch(error) { message('Could not import theme: '+error.message,'error'); }
   el('file').value='';
 }
+async function exportPack() {
+  let family=el('family').value.trim();
+  if(!themes.some(theme=>(theme.document.metadata.family || 'default').toLowerCase()===family.toLowerCase())) family=themes.find(theme=>theme.id===el('theme-picker').value)?.document.metadata.family || '';
+  if(!family){message('Choose a family pack to export.','error');return;}
+  try {
+    const response=await fetch('/api/packs/export?family='+encodeURIComponent(family));
+    if(!response.ok)throw new Error(response.status===404?'No themes found for this pack.':'Pack export failed ('+response.status+')');
+    const pack=await response.json(), blob=new Blob([JSON.stringify(pack,null,2)],{type:'application/json'}), link=document.createElement('a');
+    link.href=URL.createObjectURL(blob);link.download=pack.metadata.id+'.cyberpack.json';link.click();setTimeout(()=>URL.revokeObjectURL(link.href),1000);
+    message('Exported '+pack.metadata.name+' ('+pack.themes.length+' themes).','ok');
+  } catch(error) { message(error.message,'error'); }
+}
+async function importPack(file) {
+  if(!file)return;
+  try {
+    const pack=JSON.parse(await file.text());
+    const preview=await request('/api/packs/validate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(pack)});
+    const policy=el('pack-policy').value, conflicts=preview.conflicts.custom.length+preview.conflicts.builtin.length;
+    if(conflicts && policy==='reject') { message('Pack validated, but '+conflicts+' theme IDs already exist. Choose a conflict policy before installing.','error');return; }
+    const policyLabel={skip:'skip existing themes',replace_custom:'replace matching custom themes',reject:'reject conflicts'}[policy];
+    if(!confirm('Install '+pack.metadata.name+' with '+preview.theme_count+' themes? Policy: '+policyLabel+'.'))return;
+    const result=await request('/api/packs',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pack,policy})});
+    await refreshLibrary();
+    message('Installed '+result.name+': '+result.imported.length+' added, '+result.skipped.length+' skipped.','ok');
+  } catch(error) { message('Could not install pack: '+error.message,'error'); }
+  finally { el('pack-file').value=''; }
+}
 
 function buildSwatches() {
   el('swatches').replaceChildren(...keys.map(key=>{const label=document.createElement('label');label.className='swatch';const title=document.createElement('span');title.textContent=key.replace('_',' ');const color=document.createElement('input');color.type='color';color.id='color-'+key;color.setAttribute('aria-label',key.replace('_',' ')+' color picker');const hex=document.createElement('input');hex.type='text';hex.id='hex-'+key;hex.value='888888';hex.maxLength=7;hex.autocomplete='off';hex.spellcheck=false;hex.setAttribute('aria-label',key.replace('_',' ')+' hex color');color.addEventListener('input',()=>{hex.value=color.value.slice(1).toUpperCase();preview();});hex.addEventListener('input',()=>{const value=hex.value.trim().replace(/^#/,'');if(/^[0-9a-f]{6}$/i.test(value)){color.value='#'+value;preview();}});label.append(title,color,hex);return label;}));
@@ -238,6 +267,7 @@ el('theme-picker').addEventListener('change',async event=>{try{await request('/a
 el('load-theme').addEventListener('click',()=>{const selected=themes.find(theme=>theme.id===el('theme-picker').value);if(selected){editDocument(selected.document,selected.builtin?null:selected.id);message('Editing '+selected.document.metadata.name+'.','ok');}});
 el('new-theme').addEventListener('click',newTheme);el('duplicate-theme').addEventListener('click',duplicateTheme);el('save-theme').addEventListener('click',saveTheme);el('delete-theme').addEventListener('click',deleteTheme);
 el('import-theme').addEventListener('click',()=>el('file').click());el('file').addEventListener('change',event=>importTheme(event.target.files[0]));el('export-theme').addEventListener('click',exportTheme);
+el('export-pack').addEventListener('click',exportPack);el('import-pack').addEventListener('click',()=>el('pack-file').click());el('pack-file').addEventListener('change',event=>importPack(event.target.files[0]));
 refreshLibrary().then(()=>newTheme()).catch(error=>message(error.message,'error'));
 </script>
 </body>

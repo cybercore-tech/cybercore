@@ -7,7 +7,9 @@ use axum::{
     routing::{delete, get, post},
     Json, Router,
 };
-use cybercore::theme::{Appearance, ThemeCatalog, ThemeDocument};
+use cybercore::theme::{
+    Appearance, PackConflictPolicy, ThemeCatalog, ThemeDocument, ThemeError, ThemePackDocument,
+};
 use serde::Deserialize;
 use serde_json::{json, Value};
 use std::net::SocketAddr;
@@ -21,6 +23,9 @@ async fn main() {
         .route("/api/themes", get(list_themes).post(save_theme))
         .route("/api/themes/:id", delete(delete_theme))
         .route("/api/themes/validate", post(validate_theme))
+        .route("/api/packs", get(list_packs).post(import_pack))
+        .route("/api/packs/export", get(export_pack))
+        .route("/api/packs/validate", post(validate_pack))
         .route("/api/active/:id", post(select_theme))
         .route("/api/appearance/:mode", post(select_appearance))
         .route("/api/css/:id", get(theme_css))
@@ -74,6 +79,15 @@ fn catalog_error(error: impl ToString) -> Response {
         .into_response()
 }
 
+fn pack_error(error: ThemeError) -> Response {
+    let status = match &error {
+        ThemeError::PackConflicts { .. } => StatusCode::CONFLICT,
+        ThemeError::Io(_) => StatusCode::INTERNAL_SERVER_ERROR,
+        _ => StatusCode::BAD_REQUEST,
+    };
+    (status, Json(json!({"error": error.to_string()}))).into_response()
+}
+
 async fn list_themes() -> Response {
     let catalog = match ThemeCatalog::load() {
         Ok(catalog) => catalog,
@@ -95,6 +109,79 @@ async fn list_themes() -> Response {
         "themes": themes,
     }))
     .into_response()
+}
+
+async fn list_packs() -> Response {
+    let catalog = match ThemeCatalog::load() {
+        Ok(catalog) => catalog,
+        Err(error) => return catalog_error(error),
+    };
+    let mut families = std::collections::BTreeMap::<String, usize>::new();
+    for (_, entry) in catalog.iter() {
+        *families
+            .entry(entry.document.metadata.family.clone())
+            .or_default() += 1;
+    }
+    Json(json!({
+        "packs": families.into_iter().map(|(family, count)| json!({"family": family, "theme_count": count})).collect::<Vec<_>>()
+    }))
+    .into_response()
+}
+
+#[derive(Deserialize)]
+struct ExportPackQuery {
+    family: String,
+}
+
+async fn export_pack(Query(query): Query<ExportPackQuery>) -> Response {
+    let catalog = match ThemeCatalog::load() {
+        Ok(catalog) => catalog,
+        Err(error) => return catalog_error(error),
+    };
+    match catalog.export_family(&query.family) {
+        Some(pack) => Json(pack).into_response(),
+        None => (StatusCode::NOT_FOUND, "theme pack not found").into_response(),
+    }
+}
+
+async fn validate_pack(Json(pack): Json<ThemePackDocument>) -> Response {
+    if let Err(error) = pack.validate() {
+        return pack_error(error);
+    }
+    let catalog = match ThemeCatalog::load() {
+        Ok(catalog) => catalog,
+        Err(error) => return catalog_error(error),
+    };
+    Json(json!({
+        "valid": true,
+        "theme_count": pack.themes.len(),
+        "conflicts": catalog.pack_conflicts(&pack),
+    }))
+    .into_response()
+}
+
+#[derive(Deserialize)]
+struct ImportPackRequest {
+    pack: ThemePackDocument,
+    #[serde(default)]
+    policy: PackConflictPolicy,
+}
+
+async fn import_pack(Json(request): Json<ImportPackRequest>) -> Response {
+    let mut catalog = match ThemeCatalog::load() {
+        Ok(catalog) => catalog,
+        Err(error) => return catalog_error(error),
+    };
+    let pack_id = request.pack.metadata.id.clone();
+    let pack_name = request.pack.metadata.name.clone();
+    match catalog.import_pack(request.pack, request.policy) {
+        Ok(report) => (
+            StatusCode::CREATED,
+            Json(json!({"id": pack_id, "name": pack_name, "imported": report.imported, "skipped": report.skipped})),
+        )
+            .into_response(),
+        Err(error) => pack_error(error),
+    }
 }
 
 async fn save_theme(Json(document): Json<ThemeDocument>) -> Response {
