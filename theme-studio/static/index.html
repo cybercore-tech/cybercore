@@ -28,10 +28,10 @@
     .workspace { display:grid; grid-template-columns:minmax(290px,390px) minmax(0,1fr); gap:1.2rem; align-items:start; }
     .panel { background:color-mix(in srgb,var(--panel) 86%,var(--bg)); border:1px solid color-mix(in srgb,var(--purple) 30%,var(--line)); border-radius:4px; padding:1.1rem; box-shadow:0 12px 36px #0004,inset 0 1px 0 color-mix(in srgb,var(--fg) 5%,transparent); }
     .panel h2 { font-size:1.02rem; margin:0 0 .8rem; }
-    .field { display:grid; gap:.3rem; margin:.6rem 0; }.field label,.eyebrow { color:var(--muted); font-size:.78rem; letter-spacing:.08em; text-transform:uppercase; }
+    .field { display:grid; gap:.3rem; margin:.6rem 0; }.field label,.eyebrow { color:color-mix(in srgb,var(--fg) 76%,var(--bg)); font-size:.78rem; letter-spacing:.08em; text-transform:uppercase; }
     .row { display:grid; grid-template-columns:1fr 1fr; gap:.65rem; }.actions { display:flex; flex-wrap:wrap; gap:.5rem; margin:.85rem 0; }
-    .swatches { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:.6rem; margin-top:.8rem; }
-    .swatch { display:grid; grid-template-columns:minmax(76px,1fr) 2.6rem minmax(84px,1fr); align-items:center; gap:.45rem; color:var(--muted); font: .72rem var(--font-mono); text-transform:uppercase; }
+    .swatches { display:grid; grid-template-columns:minmax(0,1fr); gap:.5rem; margin-top:.8rem; }
+    .swatch { display:grid; grid-template-columns:7.25rem 2.6rem minmax(0,8rem); align-items:center; gap:.55rem; min-width:0; color:color-mix(in srgb,var(--fg) 84%,var(--bg)); font:.72rem var(--font-mono); text-transform:uppercase; }
     .swatch input[type=color] { width:2.6rem; height:2rem; padding:.15rem; border-radius:3px; }
     .swatch input[type=text] { min-width:0; padding:.42rem; font-size:.72rem; }
     .preview { min-height:560px; }.preview-head { display:flex; justify-content:space-between; align-items:center; gap:1rem; border-bottom:1px solid var(--line); padding-bottom:.8rem; }
@@ -40,10 +40,11 @@
     .sample-card h3 { margin:.2rem 0 .5rem; }.sample-card p { color:var(--muted); }.mono { font-family:var(--font-mono); }
     .badge { display:inline-block; border-radius:2px; padding:.2rem .55rem; color:var(--acid); background:color-mix(in srgb,var(--acid) 12%,transparent); border:1px solid color-mix(in srgb,var(--acid) 38%,transparent); font-size:.72rem; text-transform:uppercase; letter-spacing:.08em; }
     .palette-strip { display:flex; gap:.4rem; margin-top:1rem; flex-wrap:wrap; }.palette-strip i { width:2.2rem; height:2.2rem; border-radius:var(--radius); border:1px solid #ffffff22; }
-    #contrast { color:var(--muted); min-height:1.5rem; font-size:.82rem; }.theme-row { display:flex; gap:.5rem; align-items:center; }.theme-row select { flex:1; }
-    .status { min-height:1.3rem; color:var(--muted); font-size:.85rem; }.status.error { color:var(--pink); }.status.ok { color:var(--acid); }
+    #contrast { color:color-mix(in srgb,var(--fg) 76%,var(--bg)); min-height:1.5rem; font-size:.82rem; }.theme-row { display:flex; gap:.5rem; align-items:center; }.theme-row select { flex:1; }
+    #contrast.warning { color:var(--orange); }
+    .status { min-height:1.3rem; color:color-mix(in srgb,var(--fg) 76%,var(--bg)); font-size:.85rem; }.status.error { color:var(--pink); }.status.ok { color:var(--acid); }
     @media(max-width:850px) { .workspace { grid-template-columns:1fr; }.intro { display:block; } header { position:static; } }
-    @media(max-width:520px) { .sample-grid,.row { grid-template-columns:1fr; }.header-actions { justify-content:flex-end; }.swatches { grid-template-columns:1fr 1fr; } }
+    @media(max-width:520px) { .sample-grid,.row { grid-template-columns:1fr; }.header-actions { justify-content:flex-end; }.swatch { grid-template-columns:minmax(5rem,1fr) 2.6rem minmax(5.5rem,8rem); gap:.4rem; } }
   </style>
   <style id="theme-css"></style>
   <style id="draft-css"></style>
@@ -148,8 +149,9 @@ async function validateDraft(run) {
     if (run !== validationRun) return;
     const result = editMode === 'light' ? (report.light_contrast || report.contrast) : report.contrast;
     const failed = (result?.checks || []).filter(check=>!check.passes);
+    el('contrast').classList.toggle('warning',failed.length>0);
     el('contrast').textContent = failed.length ? 'Contrast needs attention: '+failed.map(check=>check.label+' '+check.ratio.toFixed(2)+':1').join(', ') : 'Common text and accent contrast checks pass.';
-  } catch (error) { if (run === validationRun) el('contrast').textContent=error.message; }
+  } catch (error) { if (run === validationRun) {el('contrast').classList.remove('warning');el('contrast').textContent=error.message;} }
 }
 async function refreshLibrary(preferred=activeId) {
   const data=await request('/api/themes'); themes=data.themes; activeId=data.active; sharedAppearance=data.appearance;
