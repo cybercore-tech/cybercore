@@ -550,12 +550,23 @@ pre .copy:hover { color: var(--cyan); border-color: var(--cyan); }
 
 /* ═════════ 08 install ═════════ */
 .install { max-width: 52rem; }
+.cli-install { display: grid; grid-template-columns: 1fr 1.15fr; gap: 2rem; align-items: center; margin-top: 1rem; padding: clamp(1.2rem, 3vw, 2rem); border: 1px solid color-mix(in srgb, var(--cyan) 38%, var(--line)); background: color-mix(in srgb, var(--panel) 92%, transparent); }
+.cli-install h3 { margin: 0 0 .7rem; font: 700 clamp(1.35rem, 3vw, 2rem)/1.05 var(--display); }
+.cli-install p:not(.kicker) { color: var(--muted); font-size: .9rem; }
+.cli-install a { color: var(--cyan); font: .72rem var(--mono); letter-spacing: .06em; }
+.cli-install code { color: var(--acid); font: inherit; }
+.cli-command { display: flex; flex-direction: column; gap: .8rem; padding: 1.2rem; border: 1px solid var(--line); background: color-mix(in srgb, var(--bg) 85%, transparent); }
+.cli-command > span { color: var(--muted); font: .65rem var(--mono); letter-spacing: .1em; }
+.cli-command > code { overflow-wrap: anywhere; padding: .9rem; border: 1px solid color-mix(in srgb, var(--acid) 35%, var(--line)); font: clamp(.7rem, 1.4vw, .9rem) var(--mono); }
+.cli-command small { color: var(--muted); font: .68rem/1.5 var(--mono); }
+.cli-command small code { color: var(--white); }
 .tabs { display: flex; gap: .3rem; margin-bottom: -1px; }
 .tabs button { position: relative; padding: .75rem 1.1rem; font: 600 .64rem/1 var(--mono); letter-spacing: .16em; color: var(--muted); background: transparent; border: 1px solid transparent; border-bottom: 0; cursor: pointer; }
 .tabs button:hover { color: var(--white); }
 .tabs button[aria-selected="true"] { color: var(--pink); background: color-mix(in srgb, var(--panel) 88%, transparent); border-color: var(--line); box-shadow: inset 0 2px var(--pink); }
 .install .window { clip-path: polygon(0 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%); }
 .install pre { min-height: 14rem; }
+@media (max-width: 700px) { .cli-install { grid-template-columns: 1fr; } }
 
 /* ═════════ footer ═════════ */
 .foot { padding: 4rem 0 3rem; border-top: 1px solid var(--line); background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--purple) 10%, transparent)); }

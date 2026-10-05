@@ -4,10 +4,10 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Cybercore — the CYBERGRID theme system</title>
-  <meta name="description" content="Cybercore is the source of truth for the Cybercore Systems Framework: one JSON schema, 72 themes plus the master mix, shared design tokens and canonical paths, read by every Cybercore tool.">
+  <meta name="description" content="Cybercore 0.8 is the shared theme engine for Cybercore apps: 81 palettes, portable custom themes and packs, design tokens, quality gates, and live cross-app updates.">
   <meta name="theme-color" content="#09080f">
   <meta property="og:title" content="Cybercore — the CYBERGRID theme system">
-  <meta property="og:description" content="One schema. 73 themes. Every surface in the grid speaks the same colours.">
+  <meta property="og:description" content="One theme engine. 81 palettes, custom packs, quality checks, and every surface in the grid speaks the same colours.">
   <meta property="og:image" content="https://cybercore-tech.github.io/cybercore/assets/img/social-card.png">
   <meta property="og:url" content="https://cybercore-tech.github.io/cybercore/">
   <meta name="twitter:card" content="summary_large_image">
@@ -108,7 +108,7 @@
         <i class="theme-swatch" aria-hidden="true"></i><span id="themeLabel">LOADING…</span><svg class="chev" aria-hidden="true"><use href="#i-chev"/></svg>
       </button>
       <div class="theme-menu" id="themeMenu" hidden>
-        <div class="theme-search"><input id="themeFilter" type="search" placeholder="FILTER 77 THEMES…" aria-label="Filter themes" autocomplete="off" spellcheck="false"></div>
+        <div class="theme-search"><input id="themeFilter" type="search" placeholder="FILTER 81 THEMES…" aria-label="Filter themes" autocomplete="off" spellcheck="false"></div>
         <div class="theme-list" id="themeList" role="listbox" aria-label="Theme"></div>
       </div>
     </div>
@@ -122,7 +122,7 @@
       <div class="hero-vignette" aria-hidden="true"></div>
       <div class="wrap hero-grid">
         <div class="hero-copy">
-          <p class="eyebrow"><span class="led"></span>CYBERGRID // SCHEMA v2 · <b data-theme-count>73</b> THEMES · ONE SOURCE OF TRUTH</p>
+          <p class="eyebrow"><span class="led"></span>CYBERGRID // THEME ENGINE v0.8 · <b data-theme-count>81</b> SOURCE PALETTES · ONE SOURCE OF TRUTH</p>
           <h1 class="title" aria-label="Cybercore">
             <span class="glitch" data-text="CYBER">CYBER</span><span class="glitch outline" data-text="CORE">CORE</span>
           </h1>
@@ -156,7 +156,7 @@
         </div>
       </div>
       <div class="wrap stats">
-        <div><b data-count="73">0</b><span>THEMES</span></div>
+        <div><b data-count="81">0</b><span>THEMES</span></div>
         <div><b data-count="7">0</b><span>FAMILIES</span></div>
         <div><b data-count="11">0</b><span>PALETTE SLOTS</span></div>
         <div><b data-count="4">0</b><span>RUNTIMES</span></div>
@@ -188,7 +188,7 @@
       <div class="wrap">
         <div class="head reveal">
           <div><p class="kicker">02 / THEME MATRIX</p><h2 class="scramble">Seven families.<br><em>Pick your signal.</em></h2></div>
-          <p>All <b data-theme-count>73</b> palettes, each previewed in its own colours. Click a card to repaint the page. Your choice follows you to every Cybercore site.</p>
+          <p>All <b data-theme-count>81</b> source palettes, each previewed in its own colours. Click a card to repaint the page. Your choice follows you to every Cybercore site.</p>
         </div>
         <div class="families reveal" id="families" role="tablist" aria-label="Theme families"></div>
         <div class="cards" id="cards"></div>
@@ -377,7 +377,7 @@
   <span class="s">"ansi"</span>: <span class="v">"\x1b[38;2;…m"</span> <span class="k">}</span>
 <span class="p">❯</span> cargo run --example list_themes
 active: <span class="v" data-active-theme-raw>cybercore-tech</span>
-count:  <span class="v">73</span>
+count:  <span class="v">81</span>
 <span class="p">❯</span> <span class="cursor">█</span></code></pre>
         </div>
       </div>
@@ -418,7 +418,7 @@ count:  <span class="v">73</span>
         <div class="window">
           <pre role="tabpanel" id="tab-rust" aria-labelledby="t-rust" data-copy><code><span class="c"># Cargo.toml</span>
 [dependencies]
-cybercore = <span class="s">"0.4"</span>
+cybercore = <span class="s">"0.8"</span>
 
 <span class="c">// main.rs</span>
 <span class="k">use</span> cybercore::{palette, paths};
@@ -450,6 +450,10 @@ curl localhost:8787/palette/cyan?format=rgb
 curl localhost:8787/paths?expand=true
 curl localhost:8787/schema</code></pre>
         </div>
+      </div>
+      <div class="cli-install reveal">
+        <div><p class="kicker">CYBERCORE 0.8 / THEME QUALITY CLI</p><h3>Install the theme checker.</h3><p>Requires Rust and Cargo. This installs <code>cybercore-theme</code> for theme contrast, compatibility, and portable pack checks. It does not install the Rust library or the standalone Theme Studio.</p><a href="https://crates.io/crates/cybercore">VIEW THE CRATE ↗</a></div>
+        <div class="cli-command"><span>QUICK INSTALL / LINUX · MACOS</span><code>curl -fsSL https://cybercore-tech.github.io/cybercore/install.sh | sh</code><a href="install.sh">REVIEW INSTALL SCRIPT ↗</a><small>Direct Cargo: <code>cargo install --locked cybercore --bin cybercore-theme</code></small></div>
       </div>
     </section>
   </main>

@@ -37,7 +37,7 @@
       'CYBERCORE BIOS v0.5.0 <b>OK</b>',
       'mount schema/cybergrid.json <b>OK</b>',
       'load families: cyberdyne · synthwave · neosynth · cyberpunk · dystopian · classics',
-      'decrypt 73 palettes × 11 slots <b>OK</b>',
+      'decrypt 81 palettes × 11 slots <b>OK</b>',
       'link tokens · components · paths <b>OK</b>',
       'neural net <em>ONLINE</em>. welcome, operator.'
     ];
@@ -234,7 +234,7 @@
   /* ---------- rotator ---------- */
   (function rotator() {
     const el = $('#rotator'); if (!el || still) return;
-    const words = ['SCHEMA', 'PALETTE', 'TOKENS', 'PATHS', '73 THEMES', 'MASHUPS'];
+    const words = ['SCHEMA', 'PALETTE', 'TOKENS', 'PATHS', '81 THEMES', 'MASHUPS'];
     let i = 0;
     setInterval(() => {
       i = (i + 1) % words.length; const target = words[i]; let f = 0;
