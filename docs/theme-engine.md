@@ -140,9 +140,13 @@ It exposes its creator API on that local server: `GET /api/themes`,
 `GET /api/css/:id?appearance=dark|light`. Saved themes are immediately
 available to every app using this catalog and config directory.
 
-The studio has a searchable theme library and a three-mode interactive
-preview for app, terminal, and mobile layouts. Its inspector separates theme
-identity, semantic color editing, design tokens, and quality checks. The
+The studio has a searchable theme library and app-reference previews for
+Cyberdeck Hub, Dockspace, and Cyberdesk, with a mobile viewport and grayscale
+proof mode to check hierarchy without color. These are illustrative previews
+of each app's common UI patterns, not embedded live app sessions. Keyboard-
+focus styling is visible in the preview. Undo/redo (Ctrl+Z / Ctrl+Shift+Z) and
+a saved/new/unsaved status keep draft edits reviewable. Its inspector separates
+theme identity, semantic color editing, design tokens, and quality checks. The
 palette editor supports all eleven color roles with color pickers and direct
 hex entry, and its live quality panel reports dark and light contrast checks.
 The style controls cover interface, display, and monospace fonts, density,
