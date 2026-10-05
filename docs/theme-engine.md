@@ -89,8 +89,16 @@ cybercore-theme validate-pack my-pack.cyberpack.json
 Strict mode fails when any checked contrast threshold is missed or the theme
 has no explicit light variant. The report covers shared semantic roles; apps
 remain responsible for checking their own component states.
-Install the checker with `cargo install cybercore --bin cybercore-theme`, or
-run it from a Cybercore checkout with `cargo run --bin cybercore-theme -- ...`.
+Install the checker with the public installer (requires Rust and Cargo):
+
+```sh
+curl -fsSL https://cybercore-tech.github.io/cybercore/install.sh | sh
+```
+
+The equivalent direct command is `cargo install --locked cybercore --bin
+cybercore-theme`. This installs the checker CLI; use `cybercore = "0.8"` as a
+Cargo dependency for the Rust library. From a checkout, run it with
+`cargo run --bin cybercore-theme -- ...`.
 
 ## Shared storage and precedence
 

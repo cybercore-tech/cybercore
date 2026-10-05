@@ -108,8 +108,15 @@ creator is the `cybercore-theme-studio` workspace package; run it with
 feedback, and shared persistence. The `cybercore-theme` CLI checks contrast,
 appearance variants, and portable packs. See
 [`docs/theme-engine.md`](docs/theme-engine.md) for the document contract,
-storage rules, API, and integration notes. Install the checker with
-`cargo install cybercore --bin cybercore-theme`.
+storage rules, API, and integration notes. Install the checker with:
+
+```sh
+curl -fsSL https://cybercore-tech.github.io/cybercore/install.sh | sh
+```
+
+This requires Rust/Cargo and installs only the `cybercore-theme` CLI. For a
+direct Cargo install, use `cargo install --locked cybercore --bin
+cybercore-theme`. Add `cybercore = "0.8"` to a Rust project to use the library.
 Studio provides live previews, per-appearance contrast feedback, stable-ID
 editing for custom themes, and **Duplicate as new** to safely derive themes
 from built-ins or existing custom themes. Imports remain drafts until saved;
