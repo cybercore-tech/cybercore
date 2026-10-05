@@ -140,18 +140,22 @@ It exposes its creator API on that local server: `GET /api/themes`,
 `GET /api/css/:id?appearance=dark|light`. Saved themes are immediately
 available to every app using this catalog and config directory.
 
-In the editor, **Edit** loads a theme for changes; saving a custom theme
-updates its stable catalog ID even if its display name changes. Built-in
-themes remain immutable. Use **Duplicate as new** to start a custom theme
-from any built-in or custom theme without overwriting the source. **New**
-starts a draft using the currently active palette. Import loads a draft and
-does not write it until Save; export downloads the current draft as JSON.
-The live sample preview and contrast report update as you edit either
-appearance variant. Studio itself follows the active shared CYBERGRID palette
-and Cyberdeck's scanline, glow, compact chrome, and monospaced control styling.
-The theme library groups entries by family; the **Theme pack** field can
-select an existing family or define a new one. Each of the eleven semantic
-colors can be set with a color picker or a direct six-digit hex value.
+The studio has a searchable theme library and a three-mode interactive
+preview for app, terminal, and mobile layouts. Its inspector separates theme
+identity, semantic color editing, design tokens, and quality checks. The
+palette editor supports all eleven color roles with color pickers and direct
+hex entry, and its live quality panel reports dark and light contrast checks.
+The style controls cover interface, display, and monospace fonts, density,
+corner shape, and motion. A custom light palette can be edited separately.
+
+**Edit** loads a theme for changes; saving a custom theme updates its stable
+catalog ID even if its display name changes. Built-in themes remain immutable.
+Use **Duplicate** to start a custom theme from any built-in or custom theme
+without overwriting the source. **New theme** starts a draft from the active
+palette. Import loads a draft and does not write it until Save; export downloads
+the current draft as JSON. The theme library groups entries by family, and the
+family field can select an existing pack or define a new one. Pack import and
+export and curated collections are available in the library panel.
 
 ### Portable theme packs
 
